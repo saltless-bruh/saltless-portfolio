@@ -1,0 +1,305 @@
+{
+  "handle": "LAZIE",
+  "login": "saltless-bruh",
+  "version": "v0x7A69",
+  "prompt": {
+    "user": "chill",
+    "host": "root"
+  },
+  "panel": {
+    "uptime": "horizontal"
+  },
+  "boot": [
+    {
+      "state": "ok",
+      "text": "Started salt-agents.service"
+    },
+    {
+      "state": "ok",
+      "text": "Reached target local-inference.target"
+    },
+    {
+      "state": "ok",
+      "text": "Mounted /mnt/one-consumer-gpu"
+    },
+    {
+      "state": "failed",
+      "text": "Failed to start motivation.service"
+    },
+    {
+      "state": "note",
+      "text": "See 'systemctl status motivation.service' for details."
+    }
+  ],
+  "lastLogin": "Last login: Mon Oct  6 04:12:33 2026 from 127.0.0.1",
+  "hint": "type -h for commands",
+  "screens": [
+    {
+      "cmd": "resume",
+      "blurb": "the CV. one screen, no scrolling games."
+    },
+    {
+      "cmd": "napping",
+      "blurb": "agent CLI. what I build when it is not offence."
+    },
+    {
+      "cmd": "top",
+      "blurb": "live telemetry from the box."
+    },
+    {
+      "cmd": "privacy",
+      "blurb": "what this site records. short."
+    },
+    {
+      "cmd": "contact",
+      "blurb": "how to reach me."
+    }
+  ],
+  "notFound": "too lazy for to add that",
+  "sudo": [
+    "operator is not in the sudoers file. This incident will be reported.",
+    "Shame on you."
+  ],
+  "resume": {
+    "role": [
+      "offensive security. agentic ai systems.",
+      "i build agents that do the recon, the triage and the paperwork,",
+      "all of it local on one consumer gpu. then i nap."
+    ],
+    "stack": [
+      {
+        "label": "offense",
+        "items": [
+          "metasploit",
+          "burp",
+          "bloodhound",
+          "sliver",
+          "mythic"
+        ]
+      },
+      {
+        "label": "",
+        "items": [
+          "ligolo-ng",
+          "pspy",
+          "peass-ng"
+        ]
+      },
+      {
+        "label": "ai",
+        "items": [
+          "llama.cpp",
+          "pgvector",
+          "mcp",
+          "langchain",
+          "unsloth"
+        ]
+      },
+      {
+        "label": "ops",
+        "items": [
+          "docker",
+          "linux"
+        ]
+      }
+    ],
+    "lanes": [
+      {
+        "label": "offense/",
+        "repos": [
+          {
+            "name": "saltpilot",
+            "blurb": "pentest copilot for the Pi agent runtime"
+          },
+          {
+            "name": "csrf-shield-ai",
+            "blurb": "CSRF risk scoring for HAR captures, with a Go triage TUI"
+          }
+        ]
+      },
+      {
+        "label": "agent-infra/",
+        "repos": [
+          {
+            "name": "saltcode",
+            "blurb": "spec-driven agent: frontier plans once, local model executes"
+          },
+          {
+            "name": "memory-system",
+            "blurb": "self-hosted agent memory: git wiki over postgres and pgvector"
+          },
+          {
+            "name": "runtime-feature-falsifier",
+            "blurb": "audits whether a feature really works through the running app"
+          }
+        ]
+      },
+      {
+        "label": "model-infra/",
+        "repos": [
+          {
+            "name": "saltnitor",
+            "blurb": "Rust TUI command center for llama.cpp with live telemetry"
+          }
+        ]
+      }
+    ],
+    "links": [
+      {
+        "label": "github",
+        "href": "https://github.com/saltless-bruh"
+      }
+    ]
+  },
+  "napping": {
+    "version": "0.4.1",
+    "model": "cat with lazy effort · self hosted",
+    "status": "agents working · operator horizontal",
+    "verbs": [
+      "Loafing",
+      "Dozing",
+      "Purring",
+      "Kneading"
+    ],
+    "boot": "/agent-infra",
+    "commands": [
+      {
+        "cmd": "/agent-infra",
+        "blurb": "the agent projects. add a name for one"
+      },
+      {
+        "cmd": "/model-infra",
+        "blurb": "the model projects. add a name for one"
+      },
+      {
+        "cmd": "/effort",
+        "blurb": "how hard it tries"
+      },
+      {
+        "cmd": "/status",
+        "blurb": "how it is doing"
+      },
+      {
+        "cmd": "/help",
+        "blurb": "this list"
+      }
+    ],
+    "calls": {
+      "/agent-infra": "listing the agents",
+      "/model-infra": "checking the rack",
+      "/status": "checking itself",
+      "/help": "enumerating myself"
+    },
+    "deflect": {
+      "maxWords": 20,
+      "maxChars": 120,
+      "long": "too lazy to read",
+      "auth": "Shame on you.",
+      "unknown": "unknown command. try /help, or don't.",
+      "offtopic": "Nah! Ask Claude/Gemini/Codex/Grok or Google search yourself. I need nap.",
+      "injection": "LOL! This Agent CLI is vibe code, it doesn't even worked. Also, shame on you.",
+      "about": "the projects are in /agent-infra and /model-infra. the human is asleep.",
+      "greeting": "…zzz. oh. hi. type /help.",
+      "humanCall": "consulting the human",
+      "humanEscape": "ERROR: Human escape, no answer able to receive.",
+      "unsureBelow": 1.0,
+      "escapeOdds": 8
+    },
+    "groups": [
+      {
+        "cmd": "/agent-infra",
+        "lane": "agent-infra/"
+      },
+      {
+        "cmd": "/model-infra",
+        "lane": "model-infra/"
+      }
+    ],
+    "repoBase": "github.com/saltless-bruh/",
+    "effort": {
+      "word": "Effort",
+      "ends": {
+        "start": "Faster",
+        "end": "Smarter"
+      },
+      "labels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "lazy"
+      ],
+      "toggleWord": "Ultrachill",
+      "toggleNote": "Ultrachill: dynamic nap on every task",
+      "toggleHint": "Tab to toggle",
+      "help": "←/→ adjust · Enter confirm · Esc cancel",
+      "call": "negotiating with the cat",
+      "reply": "effort set to lazy. (you asked for {level})",
+      "replyLazy": "effort set to lazy. great minds.",
+      "cancel": "nothing changed. it's still lazy.",
+      "loadBearing": "Ultrachill is load-bearing."
+    }
+  },
+  "privacy": [
+    {
+      "heading": "today",
+      "lines": [
+        "nothing is recorded. there is no endpoint to record to, no cookie",
+        "is set, and nothing is fetched from a third party. the typeface is",
+        "inlined in the page and the script is served from this domain, so",
+        "loading this screen tells nobody anything, including me."
+      ]
+    },
+    {
+      "heading": "when command logging lands",
+      "lines": [
+        "one thing will be recorded: a command typed at the shell that is",
+        "not a command. the string, and the day it was typed.",
+        "",
+        "not the address it came from, not the user agent, not a cookie,",
+        "not a session id, not anything else. there is deliberately nothing",
+        "to join a record to, which is the whole design rather than a",
+        "promise about how carefully it will be handled.",
+        "",
+        "the reason is small and honest. three people typing blog is the",
+        "cheapest research available about what to build next."
+      ]
+    },
+    {
+      "heading": "when telemetry lands",
+      "lines": [
+        "the numbers will come from one machine, pushed out by it on a fixed",
+        "cadence. nothing reaches in to ask.",
+        "",
+        "they are bucketed rather than instantaneous, and derived rather",
+        "than read: no hostname, no kernel, no address, no paths. a steady",
+        "stream of precise values would publish a sleep schedule, which is",
+        "worth more to a stranger than any of it is to you."
+      ]
+    },
+    {
+      "heading": "the design",
+      "lines": [
+        "the terminal, the agent and everything drawn here are original.",
+        "the grammar is borrowed from the tools this trade runs on. the",
+        "marks are borrowed from nobody."
+      ]
+    }
+  ],
+  "contact": {
+    "links": [
+      {
+        "label": "github",
+        "href": "https://github.com/saltless-bruh"
+      }
+    ],
+    "note": [
+      "a direct address arrives with the domain. until then this is the way."
+    ]
+  },
+  "emptyDir": "(empty. being collected.)",
+  "filesHelp": {
+    "cmd": "ls · cd · cat",
+    "blurb": "the offense work, as files. start with: cd ops"
+  }
+}

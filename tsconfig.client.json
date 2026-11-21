@@ -1,0 +1,19 @@
+{
+  // The CLIENT half: runs in the browser, bundled by esbuild. DOM, and no Node types at all,
+  // so a stray `node:fs` import in client code fails typecheck instead of failing at runtime.
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": [],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/client/**/*.ts", "src/rows.ts", "src/tokens.ts", "src/banner.ts", "src/blockart.ts", "src/grid.ts"]
+}

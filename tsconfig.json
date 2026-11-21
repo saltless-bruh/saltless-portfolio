@@ -1,0 +1,23 @@
+{
+  // The GENERATOR half: runs on Node, emits the prerendered HTML. No DOM.
+  // Node 26 strips types rather than compiling them, so nothing type-level may reach runtime:
+  // no enums, no parameter properties, no namespaces. `erasableSyntaxOnly` makes tsc say so.
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["es2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts", "types/**/*.d.ts"],
+  "exclude": ["src/client/**/*.ts"]
+}

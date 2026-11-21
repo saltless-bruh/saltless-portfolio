@@ -1,0 +1,25 @@
+{
+  "name": "lazie.dev",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node src/build.ts",
+    "test": "node --test",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.client.json",
+    "serve": "node --run build && python3 -m http.server --directory dist 8787",
+    "deploy": "node --run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "esbuild": "^0.28.2",
+    "marked": "^18.2.1",
+    "typescript": "^5.9.3",
+    "wrangler": "4.166.0"
+  },
+  "dependencies": {
+    "animejs": "^4.5.0",
+    "fontverter": "^2.0.0",
+    "subset-font": "^2.9.0"
+  }
+}

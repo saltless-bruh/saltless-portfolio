@@ -1,0 +1,17 @@
+node_modules/
+dist/
+
+# Local research notes and screenshots, as in the profile repo.
+docs/research/
+
+# Wrangler's local state: the local D1 database lives here and is a dev artifact.
+.wrangler/
+
+# Secrets. The telemetry push token and anything else the Worker needs.
+.dev.vars
+.env
+.env.*
+!.env.example
+
+# Brainstorm mockups and plan ledgers (superpowers), never shipped.
+.superpowers/

@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Served at lazie.<account subdomain>.workers.dev. Assets only for now: no `main` until the
+  // telemetry Worker exists (ADR 0002). Static asset requests are free and unlimited.
+  "name": "lazie",
+  "compatibility_date": "2026-11-21",
+  "assets": {
+    "directory": "./dist",
+    // /napping/index.html is served at /napping/; /napping redirects there.
+    "html_handling": "auto-trailing-slash",
+    // Anything else gets dist/404.html, with a real 404 status.
+    "not_found_handling": "404-page"
+  }
+}

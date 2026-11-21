@@ -1,0 +1,171 @@
+// COPIED from saltless-bruh/saltless-bruh @ f0a0e06, 2026-10-06. The profile repo keeps its own
+// copy and its own tests; neither follows the other. Both were frozen when this was taken, so
+// there is no sync mechanism on purpose: if this file changes here, it changes because THIS
+// site's needs changed. See docs/adr/0001.
+import { COLS, colX, rowBaselineY } from "./grid.ts";
+
+/**
+ * A text role. Each name is also the CSS class `renderRows` emits, and `src/svg.ts` holds the one
+ * rule per name that gives it its colour.
+ *
+ * `bold` is the body text at weight 700 and `accent-bold` is the Accent at weight 700: two rules
+ * rather than one weight flag, because a run carries a single style and the two combinations the
+ * Session actually uses are these. `accent-bold` is the Statusline's emphasis, where the selected
+ * effort level has to be both the brightest thing on its row and the heaviest.
+ */
+export type Style = "text" | "muted" | "accent" | "warning" | "error" | "bold" | "accent-bold";
+/**
+ * `cls` attaches an animation hook to a single run, e.g. the spinner glyph.
+ *
+ * `textOnly` and `drawOnly` are the two halves of one idea: a row may hold runs that only one
+ * of the Session's two faces, the picture and the text, is meant to show.
+ *
+ * - `textOnly` is a word the picture draws some other way. The Banner's letters are geometry,
+ *   so the row carries the handle for the transcript and `renderRows` draws nothing for it.
+ * - `drawOnly` is a glyph the transcript must not repeat. The motion layer stacks one verb per
+ *   Mascot pose at the same columns and reveals one at a time; painting all of them into one
+ *   line of text would spell none of them.
+ *
+ * Neither flag hides anything from the ADR 0001 gate: that reads `rowsToFullText`, which takes
+ * every run. Both flags are visible to `rowWidth`, `assertFits` and `charsUsed`, because a run
+ * still occupies its columns and a glyph some layer draws still needs the font subset.
+ *
+ * `layer` names a group of ALTERNATIVES: runs sharing a layer are never on screen together, so
+ * they may share columns with each other, and only with each other. A run carrying a layer still
+ * collides normally with everything outside its own group. This states the relationship rather
+ * than a class name, so the row model keeps protecting the row whatever the motion layer calls
+ * its classes. Alternatives are not the same thing as an overlay: the Statusline's highlight
+ * copy is deliberately coincident with the word beneath it, which is a different mechanism.
+ *
+ * `piece` names a group of SIDE-BY-SIDE fragments of one drawn thing: the effort scale's track,
+ * which is a rule broken by its marker, and a word split into one run per character so that each
+ * one can carry its own colour. Runs sharing a piece may sit shoulder to shoulder with no blank
+ * column between them, because they already read as one thing; they still may not OVERLAP each
+ * other, and they collide normally with everything outside the group, so a split word's columns
+ * are guarded exactly as the single run it replaced was.
+ *
+ * The three are deliberately distinct. `layer` means never together, `piece` means together and
+ * adjacent, and an overlay means together and coincident. Collapsing any two of them would make
+ * the collision check either useless or wrong: a `piece` that was allowed to overlap would let a
+ * split word hide a collision inside itself, and an overlay treated as a `piece` would be rejected
+ * for doing the one thing it exists to do.
+ */
+export type Run = {
+  col: number; text: string; style?: Style; cls?: string;
+  textOnly?: true; drawOnly?: true; layer?: string; piece?: string;
+};
+export type Row = { runs: Run[]; cls?: string };
+
+/** Escapes text for use as XML element content or as a double-quoted attribute value. */
+export const esc = (s: string): string =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/** Grid cells a string occupies: one per code point, so a character outside the BMP is one cell. */
+const cells = (s: string): number => [...s].length;
+
+const byColumn = (a: Run, b: Run): number => a.col - b.col;
+
+/** Number of columns the row occupies, measured to the end of its furthest run. */
+export function rowWidth(row: Row): number {
+  return row.runs.reduce((w, r) => Math.max(w, r.col + cells(r.text)), 0);
+}
+
+export function assertFits(rows: Row[]): void {
+  rows.forEach((row, i) => {
+    const w = rowWidth(row);
+    if (w > COLS) {
+      throw new Error(`row ${i} needs ${w} columns, the Session is ${COLS}: ${JSON.stringify(rowsToText([row]))}`);
+    }
+  });
+}
+
+/**
+ * One line per row, each kept run writing onto the grid cells it covers, so runs laid over one
+ * another (a highlight copy over its word) read once, as the eye sees them.
+ */
+function paint(rows: Row[], keep: (run: Run) => boolean): string {
+  return rows.map((row) => {
+    const line: string[] = [];
+    for (const run of [...row.runs].filter(keep).sort(byColumn)) {
+      [...run.text].forEach((ch, i) => { line[run.col + i] = ch; });
+    }
+    return Array.from(line, (ch) => ch ?? " ").join("").trimEnd();
+  }).join("\n");
+}
+
+/** The Session as a reader reads it: the transcript block. `drawOnly` runs are the picture's. */
+export const rowsToText = (rows: Row[]): string => paint(rows, (run) => !run.drawOnly);
+
+/** The Session as the picture shows it, for checking that the two faces agree. */
+export const rowsToDrawnText = (rows: Row[]): string => paint(rows, (run) => !run.textOnly);
+
+/**
+ * Every string the rows carry, in every projection one could appear in. This is what the ADR
+ * 0001 gate reads, never `rowsToText`: neither flag may hide a name from the check.
+ *
+ * Three projections, because each closes a different way a name could slip past:
+ * painting reassembles a word that is split into one run per character, as the Statusline's
+ * shimmer splits it, and the two painted faces catch a split on either side of the flags;
+ * painting also buries a run under a longer one laid over it, which the Statusline does on
+ * purpose, so every run's own text follows on a line of its own, where no overlap reaches it.
+ */
+export function rowsToFullText(rows: Row[]): string {
+  return [
+    rowsToText(rows),
+    rowsToDrawnText(rows),
+    ...rows.flatMap((row) => row.runs.map((run) => run.text)),
+  ].join("\n");
+}
+
+/**
+ * The rows as `<text>` elements, inherited unchanged from the profile. Kept rather than deleted
+ * because the site will want one SVG surface of its own (an Open Graph preview card is an image,
+ * and this is how the profile already draws text as one), and because its tests pin the escaping
+ * and the column ordering that `renderRowsHtml` below has to match.
+ */
+export function renderRows(rows: Row[]): string {
+  return rows
+    .map((row, i) => {
+      const drawn = row.runs.filter((r) => !r.textOnly);
+      if (!drawn.length && !row.cls) return "";
+      const spans = [...drawn]
+        .sort((a, b) => a.col - b.col)
+        .map((r) => `<tspan x="${colX(r.col)}" class="${[r.style ?? "text", r.cls].filter(Boolean).join(" ")}">${esc(r.text)}</tspan>`)
+        .join("");
+      const cls = row.cls ? ` class="${row.cls}"` : "";
+      return `<text${cls} y="${rowBaselineY(i)}" xml:space="preserve">${spans}</text>`;
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+/**
+ * The rows as HTML, which is what the site renders. Same model, and it must agree with
+ * `renderRows` on escaping and on column order, but two things differ and both are forced by the
+ * target rather than chosen:
+ *
+ * - **A blank row emits an element.** SVG positions every row at an absolute baseline, so an empty
+ *   one can be dropped. HTML rows are in flow, so dropping a blank row pulls everything below it
+ *   up a line and the composition silently loses its spacing.
+ * - **Every row carries `.row`.** The stylesheet needs a hook on all of them for the cell height
+ *   and the positioning context, so a row's own `cls` appends to it instead of replacing it.
+ */
+export function renderRowsHtml(rows: Row[]): string {
+  return rows
+    .map((row) => {
+      const spans = [...row.runs]
+        .filter((r) => !r.textOnly)
+        .sort((a, b) => a.col - b.col)
+        .map((r) => {
+          const cls = [r.style ?? "text", r.cls].filter(Boolean).join(" ");
+          return `<span class="${cls}" style="--c:${r.col}">${esc(r.text)}</span>`;
+        })
+        .join("");
+      return `<div class="${["row", row.cls].filter(Boolean).join(" ")}">${spans}</div>`;
+    })
+    .join("\n");
+}
+
+export function charsUsed(rows: Row[]): string {
+  return [...new Set(rows.flatMap((r) => r.runs.flatMap((run) => [...run.text])))].join("");
+}
