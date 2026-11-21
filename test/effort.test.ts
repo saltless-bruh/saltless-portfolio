@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadContent } from "../src/content.ts";
 import { nappingCfg } from "../src/screens.ts";
-import { openEffort, move, slideBack, effortRows, confirmReply } from "../src/client/effort.ts";
+import { openEffort, move, slideBack, effortRows, effortPanel, SCALE_WIDTH, confirmReply } from "../src/client/effort.ts";
 
 const c = nappingCfg(loadContent()).effort;
 const LAZY = c.labels.indexOf("lazy");
@@ -34,10 +34,11 @@ test("the reply names what was asked for, and is pleased by lazy", () => {
   assert.equal(confirmReply(c, LAZY), "effort set to lazy. great minds.");
 });
 
-test("the panel fits a 40-column screen at every position", () => {
+test("the title and the scale fit a 40-column screen at every position (the key hints are prose and wrap)", () => {
   for (let at = 0; at < c.labels.length; at++) {
     for (const ultrachill of ["on", "off"] as const) {
-      for (const row of effortRows(c, { at, ultrachill, note: c.loadBearing })) {
+      const p = effortPanel(c, { at, ultrachill, note: c.loadBearing });
+      for (const row of [...p.title, ...p.scale]) {
         for (const r of row.runs) assert.ok(r.col + [...r.text].length <= 40, `"${r.text}" ends at ${r.col + [...r.text].length}`);
       }
     }
@@ -55,4 +56,26 @@ test("the marker sits over the middle of the selected level, which is the one dr
   const all = effortRows(c, openEffort(c)).flatMap((r) => r.runs);
   assert.ok(all.find((r) => r.text === "lazy")!.cls!.includes("eff-lazy"), "lazy carries the rainbow");
   assert.ok(all.find((r) => r.text === c.toggleWord)!.cls!.includes("eff-toggle"), "Ultrachill is tappable");
+});
+
+test("laid out like an agent CLI's picker: title left, a centred scale spread edge to edge, hints at the bottom", () => {
+  const p = effortPanel(c, openEffort(c));
+  assert.deepEqual(p.title.map((r) => r.runs.map((x) => [x.col, x.text])), [[[0, c.word]]]);
+  const [ends, track, levels] = p.scale;
+  const e = ends!.runs;
+  assert.deepEqual([e[0]!.col, e[0]!.text], [0, c.ends.start], "Faster at the left edge");
+  assert.equal(e.at(-1)!.col + [...e.at(-1)!.text].length, SCALE_WIDTH, "Smarter at the right edge");
+  const t = track!.runs;
+  assert.equal(t[0]!.col, 0);
+  assert.equal(t.at(-1)!.col + [...t.at(-1)!.text].length, SCALE_WIDTH, "the line runs the full width");
+  const l = levels!.runs;
+  assert.equal(l[0]!.col, 0, "the first level starts at the left edge");
+  assert.equal(l.at(-1)!.col + [...l.at(-1)!.text].length, SCALE_WIDTH, "the last level ends at the right edge");
+  const gaps = l.slice(1).map((x, i) => x.col - (l[i]!.col + [...l[i]!.text].length));
+  assert.ok(Math.max(...gaps) - Math.min(...gaps) <= 1, `levels are spread evenly: ${gaps}`);
+  const note = p.scale.flatMap((r) => r.runs).find((x) => x.text === c.toggleNote)!;
+  assert.equal(note.col, Math.floor((SCALE_WIDTH - [...c.toggleNote].length) / 2), "the description is centred under the scale");
+  assert.deepEqual(p.help.map((r) => r.runs.length), [1]);
+  assert.match(p.help[0]!.runs[0]!.text, /Tab/);
+  assert.match(p.help[0]!.runs[0]!.text, /Ultrachill/);
 });

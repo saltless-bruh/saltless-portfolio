@@ -12,7 +12,6 @@ export type EffortCfg = {
   labels: string[];
   toggleWord: string;
   toggleNote: string;
-  toggleHint: string;
   help: string;
   call: string;
   /** `{level}` is replaced with what was asked for. */
@@ -24,10 +23,8 @@ export type EffortCfg = {
 
 export type EffortState = { at: number; ultrachill: "on" | "off"; note: string };
 
-/** Where the scale sits: indented two columns, levels two apart, so five of them fit in 40. */
-const SCALE_COL = 2;
-const GAP = 2;
-const WIDTH = 40;
+/** The scale's width in columns: the narrowest screen, so it never has to reflow on a phone. */
+export const SCALE_WIDTH = 40;
 
 const lazyAt = (c: EffortCfg): number => c.labels.indexOf("lazy");
 
@@ -49,25 +46,34 @@ export const confirmReply = (c: EffortCfg, picked: number): string =>
 
 const len = (s: string): number => [...s].length;
 
-/** Each level's starting column. */
+/** Each level's starting column: first at the left edge, last ending at the right, gaps even. */
 function levelCols(c: EffortCfg): number[] {
+  const n = c.labels.length;
+  const free = SCALE_WIDTH - c.labels.reduce((t, l) => t + len(l), 0);
   const cols: number[] = [];
-  let col = SCALE_COL;
-  for (const l of c.labels) { cols.push(col); col += len(l) + GAP; }
+  let col = 0;
+  c.labels.forEach((l, i) => {
+    cols.push(col);
+    col += len(l) + Math.floor(free / (n - 1)) + (i < free % (n - 1) ? 1 : 0);
+  });
   return cols;
 }
 
-export function effortRows(c: EffortCfg, s: EffortState): Row[] {
+const centred = (text: string): number => Math.max(0, Math.floor((SCALE_WIDTH - len(text)) / 2));
+
+/**
+ * The picker in three parts, the way an agent CLI lays one out: the title at the left, the scale
+ * as a fixed-width block the page centres, and the key hints at the bottom left.
+ */
+export function effortPanel(c: EffortCfg, s: EffortState): { title: Row[]; scale: Row[]; help: Row[] } {
   const cols = levelCols(c);
-  const end = cols.at(-1)! + len(c.labels.at(-1)!);
   // The marker over the middle of the selected word (left of centre when the word is even).
   const marker = cols[s.at]! + Math.floor((len(c.labels[s.at]!) - 1) / 2);
-  const ends = `${c.ends.start} ← → ${c.ends.end}`;
 
   const track: Run[] = [];
-  if (marker > SCALE_COL) track.push({ col: SCALE_COL, text: "─".repeat(marker - SCALE_COL), style: "muted" });
-  track.push({ col: marker, text: "▲", style: "accent" });
-  if (end > marker + 1) track.push({ col: marker + 1, text: "─".repeat(end - marker - 1), style: "muted" });
+  if (marker > 0) track.push({ col: 0, text: "\u2500".repeat(marker), style: "muted" });
+  track.push({ col: marker, text: "\u25b2", style: "accent" });
+  if (SCALE_WIDTH > marker + 1) track.push({ col: marker + 1, text: "\u2500".repeat(SCALE_WIDTH - marker - 1), style: "muted" });
 
   const levels: Run[] = c.labels.map((l, i) => ({
     col: cols[i]!, text: l,
@@ -75,17 +81,30 @@ export function effortRows(c: EffortCfg, s: EffortState): Row[] {
     cls: ["eff-lv", `eff-lv-${i}`, i === lazyAt(c) ? "eff-lazy" : ""].filter(Boolean).join(" "),
   }));
 
-  const stateCol = len(c.toggleWord) + 2;
-  return [
-    { cls: "eff", runs: [{ col: 0, text: c.word, style: "accent" }, { col: WIDTH - len(ends), text: ends, style: "muted" }] },
-    { cls: "eff", runs: track },
-    { cls: "eff", runs: levels },
-    { cls: "eff", runs: [
-      { col: 0, text: c.toggleWord, style: "accent", cls: "eff-toggle eff-ultra" },
-      { col: stateCol, text: s.ultrachill, style: s.ultrachill === "on" ? "accent-bold" : "error" },
-      { col: stateCol + 5, text: c.toggleHint, style: "muted" },
-    ] },
-    { cls: "eff", runs: [{ col: 0, text: s.note, style: "muted" }] },
-    { cls: "eff", runs: [{ col: 0, text: c.help, style: "muted" }] },
-  ];
+  // Ultrachill, centred as if its state were always three letters, so on/off never shifts the word.
+  const toggleAt = centred(`${c.toggleWord}  off`);
+  return {
+    title: [{ cls: "eff", runs: [{ col: 0, text: c.word, style: "accent-bold" }] }],
+    scale: [
+      { cls: "eff", runs: [
+        { col: 0, text: c.ends.start, style: "text" },
+        { col: SCALE_WIDTH - len(c.ends.end), text: c.ends.end, style: "text" },
+      ] },
+      { cls: "eff", runs: track },
+      { cls: "eff", runs: levels },
+      { cls: "eff", runs: s.note ? [{ col: centred(s.note), text: s.note, style: "muted" }] : [] },
+      { runs: [] },
+      { cls: "eff", runs: [
+        { col: toggleAt, text: c.toggleWord, style: "accent", cls: "eff-toggle eff-ultra" },
+        { col: toggleAt + len(c.toggleWord) + 2, text: s.ultrachill, style: s.ultrachill === "on" ? "accent-bold" : "error" },
+      ] },
+    ],
+    help: [{ cls: "eff", runs: [{ col: 0, text: c.help, style: "muted" }] }],
+  };
+}
+
+/** The whole panel as one list of rows, in reading order. */
+export function effortRows(c: EffortCfg, s: EffortState): Row[] {
+  const p = effortPanel(c, s);
+  return [...p.title, ...p.scale, ...p.help];
 }

@@ -1,6 +1,6 @@
 import { createTimeline } from "animejs";
-import { renderRowsHtml, rowWidth } from "../rows.ts";
-import { openEffort, move, slideBack, effortRows, confirmReply, type EffortState } from "./effort.ts";
+import { renderRowsHtml } from "../rows.ts";
+import { openEffort, move, slideBack, effortPanel, SCALE_WIDTH, confirmReply, type EffortState } from "./effort.ts";
 import {
   RESULT, exchangeRows, deflect, deflectionRows, normalize, slashMenu, workingLine, type NappingCfg,
 } from "../napping.ts";
@@ -135,18 +135,21 @@ export function bootAgent(cfg: Cfg, io: HTMLInputElement): void {
    * the walk and `flipping` the toggle's snap-back, so a second press cannot double either.
    */
   let panel: { s: EffortState; el: HTMLElement; busy: boolean; flipping: boolean } | null = null;
-  // The panel takes the input box's place at full width; its rows are a fixed column layout, so the
-  // block is sized to its widest row and centred in the box.
+  // The panel takes the input's place the way an agent CLI's picker does: a lit rule across the
+  // width, the title at the left, the scale centred, the key hints at the bottom left.
+  const status = document.querySelector<HTMLElement>("#band .status");
   const draw = () => {
     if (!panel) return;
-    const rows = effortRows(cfg.effort, panel.s);
-    panel.el.style.width = `calc(${Math.max(...rows.map(rowWidth))} * var(--cell-w))`;
-    panel.el.innerHTML = renderRowsHtml(rows);
+    const p = effortPanel(cfg.effort, panel.s);
+    panel.el.innerHTML = `<div class="eff-title">${renderRowsHtml(p.title)}</div>`
+      + `<div class="eff-scale" style="width:calc(${SCALE_WIDTH} * var(--cell-w))">${renderRowsHtml(p.scale)}</div>`
+      + `<div class="eff-help">${renderRowsHtml(p.help)}</div>`;
   };
   const openPanel = () => {
-    box.insertAdjacentHTML("beforebegin", `<div id="effort" class="box"><div class="effort-in"></div></div>`);
-    panel = { s: openEffort(cfg.effort), el: document.querySelector<HTMLElement>("#effort .effort-in")!, busy: false, flipping: false };
+    box.insertAdjacentHTML("beforebegin", `<div id="effort"></div>`);
+    panel = { s: openEffort(cfg.effort), el: document.querySelector<HTMLElement>("#effort")!, busy: false, flipping: false };
     box.style.display = "none";
+    if (status) status.style.display = "none";
     menu.hidden = true;
     draw();
     toEnd();
@@ -155,6 +158,7 @@ export function bootAgent(cfg: Cfg, io: HTMLInputElement): void {
     document.querySelector("#effort")?.remove();
     panel = null;
     box.style.display = "";
+    if (status) status.style.display = "";
     append(renderRowsHtml(deflectionRows("/effort", { call, result, style: "muted" })));
     paint();
   };

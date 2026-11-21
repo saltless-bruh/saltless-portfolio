@@ -221,7 +221,7 @@ export function validateContent(raw: unknown): Content {
       if (!labels.includes("lazy")) throw new Error("content.json: napping.effort.labels must include lazy, which every choice slides back to");
       return {
         word: s("word"), ends: { start: str(ends.start, "napping.effort.ends.start"), end: str(ends.end, "napping.effort.ends.end") },
-        labels, toggleWord: s("toggleWord"), toggleNote: s("toggleNote"), toggleHint: s("toggleHint"), help: s("help"),
+        labels, toggleWord: s("toggleWord"), toggleNote: s("toggleNote"), help: s("help"),
         call: s("call"), reply: s("reply"), replyLazy: s("replyLazy"), cancel: s("cancel"), loadBearing: s("loadBearing"),
       };
     })(),
