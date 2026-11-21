@@ -20,7 +20,7 @@ test("a missing address answers in zsh's words, and q goes back to the shell", (
 test("Cloudflare serves dist/ as assets only, with the 404 page for anything missing", () => {
   const cfg = JSON.parse(read("wrangler.jsonc").replace(/^\s*\/\/.*$/gm, ""));
   assert.equal(cfg.name, "lazie");
-  assert.equal(cfg.main, undefined, "no Worker script yet: telemetry adds one later (ADR 0002)");
+  assert.equal(cfg.main, undefined, "assets only: no Worker script (ADR 0002's telemetry was dropped)");
   assert.equal(cfg.assets.directory, "./dist");
   assert.equal(cfg.assets.not_found_handling, "404-page");
   assert.equal(cfg.assets.run_worker_first, undefined, "on the free plan it turns asset requests into 429s");

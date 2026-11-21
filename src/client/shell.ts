@@ -4,6 +4,7 @@ import { run, BUILTINS, type Cfg, type Outcome } from "./commands.ts";
 import { completeLine, remember, loadHistory, Recall } from "./readline.ts";
 import { resolve, completePath, validCwd, fitPath } from "./fs.ts";
 import { scramble } from "./scramble.ts";
+import { wireAlarm } from "./alarm.ts";
 
 const $ = <T extends Element>(sel: string): T => {
   const el = document.querySelector<T>(sel);
@@ -28,6 +29,10 @@ document.addEventListener("keydown", (e) => {
 document.querySelectorAll<HTMLElement>(".bar .win").forEach((el, i) => {
   el.addEventListener("click", () => { const to = routes[i]; if (to) window.location.assign(to); });
 });
+
+// The cat's rack goes haywire now and then. Not under reduced motion: the CSS holds a still frame.
+const mascot = document.querySelector<SVGSVGElement>("svg.mascot");
+if (mascot && !matchMedia("(prefers-reduced-motion: reduce)").matches) wireAlarm(mascot);
 
 const io = document.querySelector<HTMLInputElement>("#io");
 if (cfg.active === "napping" && io && cfg.napping) {

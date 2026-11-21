@@ -1,5 +1,9 @@
 # Telemetry goes through the Worker, not a static blob
 
+> **Status: dropped, 2026-11-21.** The owner's call: too much machinery (a Worker, storage, a secret, a
+> timer on the laptop) to light a few pixels. The rack LEDs are decoration now: they blink (`live`)
+> by default, nothing is fetched or reported, and the site stays assets-only. Kept for the reasoning.
+
 The operator's machine POSTs its derived measurements to one authenticated Worker route. The Worker
 writes a single row to D1, and the site reads those values back through the same Worker. The brief
 specified something slightly different: a static JSON blob the machine would PUT to and the page

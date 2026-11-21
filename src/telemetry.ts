@@ -1,13 +1,13 @@
 /**
- * The operator box's telemetry state (CONTEXT.md, Telemetry): `live` while pushes arrive on the
- * 5-minute cadence, `stale` after 15 minutes without one, `offline` after 30. The rack LEDs carry it,
+ * The rack LEDs' look. `live`: power steady, each activity LED on its own flicker; `stale`: the
+ * drawn pattern, frozen; `offline`: activity dark, power on a standby blink. The LEDs carry it,
  * never the cat, who is asleep either way.
  */
 export type Telemetry = "live" | "stale" | "offline";
 
 /**
- * Nothing pushes telemetry yet (the Worker and the box's push script are unbuilt), so the honest
- * state is `offline`, the same rule as the MOTD's placeholders: never a fabricated reading. When the
- * Worker lands, the client sets `data-telemetry` from fetched data and this stays the build default.
+ * The LEDs are decoration, not a reading: the live-telemetry Worker (ADR 0002) was dropped on
+ * 2026-11-21 as too much machinery for a few coloured pixels. Nothing is fetched or reported; the
+ * rack simply looks busy, so the privacy page's "nothing is recorded" stays true.
  */
-export const TELEMETRY_TODAY: Telemetry = "offline";
+export const TELEMETRY_TODAY: Telemetry = "live";

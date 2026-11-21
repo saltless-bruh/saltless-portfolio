@@ -203,9 +203,9 @@ test("the LEDs are read from the art", () => {
   for (const l of LEDS) assert.equal(l.drawn, POSES.sleep!.rows[l.y]![l.x] === "6", `${l.x},${l.y}`);
 });
 
-test("the svg carries the telemetry state, offline today", () => {
-  assert.match(mascotSvg(), /<svg class="mascot"[^>]* data-telemetry="offline"/);
-  assert.match(mascotSvg("live"), /data-telemetry="live"/);
+test("the svg carries the LED look, blinking (live) by default", () => {
+  assert.match(mascotSvg(), /<svg class="mascot"[^>]* data-telemetry="live"/);
+  assert.match(mascotSvg("offline"), /data-telemetry="offline"/);
 });
 
 test("every LED is its own layer, under the alarm", () => {
