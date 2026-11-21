@@ -24,7 +24,7 @@ test("the agent side carries no offense projects, no abandoned ones, and no rés
   for (const gone of ["orchbiter", "saltpilot", "csrf-shield-ai", "/whoami", "/ops", "/stack"]) {
     assert.ok(!all.includes(gone), `${gone} is still in napping`);
   }
-  assert.equal(cfg.boot, "/agent-infra", "the boot shows the proof first");
+  assert.equal(cfg.boot, "/help", "the boot opens with /help, so a visitor sees what it can do before anything else");
 });
 
 test("input is matched however it is spaced or cased", () => {

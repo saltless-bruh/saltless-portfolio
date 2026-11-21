@@ -22,7 +22,9 @@ export function bootAgent(cfg: Cfg, io: HTMLInputElement): void {
   const cmdline = document.querySelector<HTMLElement>("#prompt .cmdline");
   if (!term || !log || !cmdline) return;
 
-  const sigil = cmdline.innerHTML;
+  // Only the prompt glyph is the template. The static row also carries the placeholder, and copying
+  // that too drew "try /help" underneath every keystroke.
+  const sigil = cmdline.querySelector(".accent")?.outerHTML ?? "";
   const paint = () => {
     const typed = io.value;
     cmdline.innerHTML = sigil
