@@ -4,6 +4,9 @@ import { COLS_NARROW } from "./grid.ts";
 import type { NappingCfg } from "./napping.ts";
 import { readFileSync } from "node:fs";
 import { train } from "./client/brain.ts";
+import { renderDoc } from "./reader.ts";
+import type { Talk } from "./napping.ts";
+
 
 const blank = (): Row => ({ runs: [] });
 const line = (text: string, style?: Row["runs"][number]["style"], col = 0): Row =>
@@ -120,8 +123,22 @@ export function contactRows(c: Content): Row[] {
  * from the full content model twice, once here and once in the browser, would be two chances to
  * disagree. It also keeps the bundle from needing the content model at all.
  */
+/**
+ * A project's scripted talk, from `talks/<repo>.md`: the first paragraph is the agent's opening
+ * line, the rest renders as the body. A listed repo without one stops the build, so a new project
+ * cannot ship mute.
+ */
+function talk(name: string): Talk {
+  const file = new URL(`../talks/${name}.md`, import.meta.url);
+  let src: string;
+  try { src = readFileSync(file, "utf8"); } catch { throw new Error(`talks/${name}.md is missing: every listed repo needs a talk`); }
+  const [lead, ...rest] = src.trim().split(/\n\s*\n/);
+  return { lead: lead!.replace(/\s+/g, " ").trim(), html: renderDoc(rest.join("\n\n"), { dir: [], links: {} }), source: `${name}/README.md` };
+}
+
 export function nappingCfg(c: Content): NappingCfg {
   const n = c.napping;
+  const talks: Record<string, Talk> = {};
   const output: Record<string, string[]> = {
     "/status": [`model:  ${n.model}`, `status: ${n.status}`],
     "/help": n.commands.map((x) => `${x.cmd.padEnd(14)}${x.blurb}`),
@@ -132,14 +149,18 @@ export function nappingCfg(c: Content): NappingCfg {
     const lane = c.resume.lanes.find((l) => l.label === g.lane);
     if (!lane) throw new Error(`content.json: napping.groups ${g.cmd} names lane ${g.lane}, which resume.lanes lacks`);
     const repos = lane.repos;
-    output[g.cmd] = [repos.map((r) => r.name).join("  ")];
-    for (const r of repos) output[`${g.cmd} ${r.name}`] = [r.blurb, `${n.repoBase}${r.name}`];
+    const pad = Math.max(...repos.map((r) => r.name.length)) + 2;
+    output[g.cmd] = [...repos.map((r) => `${r.name.padEnd(pad)}${r.blurb}`), n.groupHint.replace("{cmd}", g.cmd)];
+    for (const r of repos) {
+      output[`${g.cmd} ${r.name}`] = [r.blurb, `${n.repoBase}${r.name}`];
+      talks[`${g.cmd} ${r.name}`] = talk(r.name);
+    }
   }
   const examples = JSON.parse(readFileSync(new URL("../brain/examples.json", import.meta.url), "utf8")) as { train: Record<string, string[]> };
   return {
     version: n.version, model: n.model, status: n.status, verbs: n.verbs, boot: n.boot,
     placeholder: n.placeholder, cwd: n.cwd, tips: n.tips, shortcutsHint: n.shortcutsHint,
-    shortcuts: n.shortcuts, exitConfirm: n.exitConfirm, interrupted: n.interrupted,
+    shortcuts: n.shortcuts, exitConfirm: n.exitConfirm, interrupted: n.interrupted, talkDone: n.talkDone, interruptHint: n.interruptHint, talks,
     commands: n.commands, calls: n.calls, deflect: n.deflect, output, brain: train(examples.train), effort: n.effort,
   };
 }

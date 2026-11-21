@@ -59,6 +59,9 @@ ${gridCss()}
   overflow-wrap: anywhere;
 }
 
+/* The browser gives pre and code a generic "monospace", which is not this face and draws ▶ and ◀
+   two cells wide, so every diagram drifted out of its columns. They inherit the site's face instead. */
+pre, code, kbd, samp { font-family: inherit; font-size: 1em }
 .text { color: var(--text) }
 .muted { color: var(--muted) }
 .accent { color: var(--accent) }
@@ -168,6 +171,21 @@ ${gridCss()}
 #effort { border-top: 1px solid var(--accent); padding-top: calc(var(--cell-h) * .75) }
 #effort .eff-scale { margin: var(--cell-h) auto; max-width: 100% }
 #effort .eff-help { margin-top: var(--cell-h) }
+/* A project's talk: prose under the agent's bullet, the way an agent CLI answers. On the cell grid
+   vertically (line height = one row, gaps = one row); bold lead-ins in the accent; diagrams bare. */
+.talk { margin-left: calc(var(--cell-w) * 2); max-width: 100ch; white-space: normal; line-height: var(--cell-h) }
+.talk p, .talk ol, .talk ul, .talk pre, .talk blockquote { margin: 0 0 var(--cell-h) }
+.talk strong { color: var(--accent); font-weight: 700 }
+.talk ol { padding-left: 3ch; list-style: decimal }
+.talk ol li::marker { color: var(--muted) }
+.talk .md-code { border: none; margin: 0 0 var(--cell-h) }
+.talk .md-code figcaption { display: none }
+.talk .md-code pre { padding: 0 }
+.talk pre { white-space: pre; overflow-x: auto; color: var(--text); margin-block: 0 var(--cell-h) }
+.talk blockquote { border-left: 2px solid var(--accent); padding-left: 1.5ch; color: var(--text) }
+.talk blockquote p { margin: 0 }
+.talk > p:last-child:not(:first-child) { color: var(--muted) }
+.working { color: var(--muted) }
 #menu { padding-block: calc(var(--cell-h) * .25) }
 #menu .item { cursor: pointer }
 #menu .item.sel { background: var(--surface) }

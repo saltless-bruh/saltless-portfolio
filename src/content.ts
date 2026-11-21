@@ -25,6 +25,10 @@ export type NappingContent = {
   shortcutsHint: string; shortcuts: { keys: string; what: string }[];
   /** Said in the status line after one Ctrl+C on an empty prompt. */
   exitConfirm: string;
+  /** The last line of a group listing, `{cmd}` filled in; and the line after a talk. */
+  groupHint: string; talkDone: string;
+  /** The status line's left half while the agent works. */
+  interruptHint: string;
   /** The result of Esc while the agent is working. */
   interrupted: string;
   commands: { cmd: string; blurb: string }[];
@@ -187,6 +191,9 @@ export function validateContent(raw: unknown): Content {
       return { keys: str(o.keys, `napping.shortcuts[${i}].keys`), what: str(o.what, `napping.shortcuts[${i}].what`) };
     }),
     exitConfirm: str(n.exitConfirm, "napping.exitConfirm"),
+    groupHint: str(n.groupHint, "napping.groupHint"),
+    talkDone: str(n.talkDone, "napping.talkDone"),
+    interruptHint: str(n.interruptHint, "napping.interruptHint"),
     interrupted: str(n.interrupted, "napping.interrupted"),
     commands: arr(n.commands, "napping.commands").map((v, i) => {
       const o = obj(v, `napping.commands[${i}]`);

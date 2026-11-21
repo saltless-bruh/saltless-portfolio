@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadContent } from "../src/content.ts";
 import { nappingCfg } from "../src/screens.ts";
-import { deflect, normalize, slashMenu, statusRight, SPINNER, workingLine } from "../src/napping.ts";
+import { deflect, normalize, slashMenu, statusRight, SPINNER, workingRuns } from "../src/napping.ts";
 
 /** Dice for the random escape: one that never rolls it, one that always does. */
 const NEVER = () => 0.999;
@@ -10,9 +10,13 @@ const ALWAYS = () => 0;
 
 const cfg = nappingCfg(loadContent());
 
-test("each group lists its projects, and each project points to its repo", () => {
-  assert.deepEqual(cfg.output["/agent-infra"], ["saltcode  memory-system  runtime-feature-falsifier"]);
-  assert.deepEqual(cfg.output["/model-infra"], ["saltnitor"]);
+test("each group lists its projects with their one-liners, and says how to hear the story", () => {
+  const agents = cfg.output["/agent-infra"]!;
+  assert.match(agents[0]!, /^saltcode\s+spec-driven agent/);
+  assert.match(agents[1]!, /^memory-system\s+self-hosted agent memory/);
+  assert.match(agents[2]!, /^runtime-feature-falsifier\s+audits whether/);
+  assert.match(agents.at(-1)!, /\/agent-infra <name>/);
+  assert.match(cfg.output["/model-infra"]![0]!, /^saltnitor\s+Rust TUI/);
   assert.deepEqual(cfg.output["/agent-infra saltcode"], [
     "spec-driven agent: frontier plans once, local model executes",
     "github.com/saltless-bruh/saltcode",
@@ -112,10 +116,14 @@ test("the status line fits a phone: the effort word stays, the toggle note goes 
   assert.ok([...loadContent().napping.shortcutsHint].length + 2 + [...r.text].length <= 40, "the narrow status line overflows 40 columns");
 });
 
-test("the working line spins in ASCII the font always has, and says how to stop it", () => {
+test("the working line: an ASCII spin, a cat verb, the time, and the effort it is thinking with", () => {
   assert.deepEqual(SPINNER, ["|", "/", "-", "\\"]);
-  const line = workingLine("Loafing", 2, 2);
-  assert.equal(line, "- Loafing\u2026 (2s \u00b7 esc to interrupt)");
+  const runs = workingRuns("Loafing", 2, 2, "lazy");
+  assert.equal(runs.map((r) => r.text).join(""), "- Loafing\u2026 (2s \u00b7 thinking with lazy effort)");
+  assert.deepEqual(runs.map((r) => r.style), ["accent", "accent", "muted", "warning", "muted"]);
+  assert.equal(runs.map((r) => r.text).join("").includes("token"), false, "no token count");
+  assert.match(workingRuns("Dozing", 0, 113, "lazy").map((r) => r.text).join(""), /\(1m 53s \u00b7/, "minutes past 60 seconds");
+  assert.match(workingRuns("Dozing", 0, 60, "lazy").map((r) => r.text).join(""), /\(1m 0s \u00b7/);
 });
 
 test("each turn in the log is followed by a blank row, the boot turn included", async () => {
@@ -123,4 +131,18 @@ test("each turn in the log is followed by a blank row, the boot turn included", 
   const html = nappingHtml(loadContent(), "");
   const log = html.slice(html.indexOf('<div id="log"'), html.indexOf('<div id="band">'));
   assert.match(log, /<div class="row"><\/div>\s*<\/div>\s*$/, "the boot exchange ends with a blank row inside the log");
+});
+
+test("every project has a scripted talk, built from its README, ending with where it lives", () => {
+  const names = ["/agent-infra saltcode", "/agent-infra memory-system", "/agent-infra runtime-feature-falsifier", "/model-infra saltnitor"];
+  assert.deepEqual(Object.keys(cfg.talks).sort(), names.sort());
+  for (const [cmd, t] of Object.entries(cfg.talks)) {
+    const name = cmd.split(" ")[1]!;
+    assert.equal(t.source, `${name}/README.md`, "the tool line names what it read");
+    assert.ok(t.lead.length > 20 && !t.lead.includes("<"), `${cmd}: the opening line is plain text`);
+    assert.ok(t.html.includes(`github.com/saltless-bruh/${name}`), `${cmd}: ends with where the repo lives`);
+    assert.ok(!/[\u2014\u2013]/.test(t.lead + t.html), `${cmd}: no em or en dashes`);
+    assert.match(t.html, /<pre>/, `${cmd}: has a diagram`);
+    assert.match(t.html, /<blockquote>/, `${cmd}: ends with an in-short block`);
+  }
 });

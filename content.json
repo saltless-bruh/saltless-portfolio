@@ -171,6 +171,9 @@
       { "keys": "ctrl+c twice", "what": "leave" }
     ],
     "exitConfirm": "Press Ctrl-C again to exit",
+    "interruptHint": "esc to interrupt",
+    "groupHint": "ask {cmd} <name> for the story",
+    "talkDone": "napped for {seconds}s \u00b7 done {time}",
     "interrupted": "Interrupted. Nothing was asked of the agents.",
     "commands": [
       {

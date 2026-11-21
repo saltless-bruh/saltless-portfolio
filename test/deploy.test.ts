@@ -71,3 +71,8 @@ test("a page someone can be linked to straight from a CV shows the way back as m
     assert.ok(m[1].length <= COLS_NARROW, `${cmd}'s status line overflows a phone`);
   }
 });
+
+test("pre and code use the site's face, not the browser's generic monospace (which draws arrows two cells wide)", async () => {
+  const { css } = await import("../src/css.ts");
+  assert.match(css(""), /pre, code, kbd, samp \{ font-family: inherit; font-size: 1em \}/);
+});

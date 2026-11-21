@@ -2,7 +2,7 @@ import { createTimeline } from "animejs";
 import { renderRowsHtml } from "../rows.ts";
 import { openEffort, move, slideBack, effortPanel, SCALE_WIDTH, confirmReply, type EffortState } from "./effort.ts";
 import {
-  RESULT, exchangeRows, deflect, deflectionRows, normalize, slashMenu, workingLine, type NappingCfg,
+  RESULT, CALL, exchangeRows, deflect, deflectionRows, normalize, slashMenu, workingRuns, type NappingCfg, type Talk,
 } from "../napping.ts";
 import { Recall, remember } from "./readline.ts";
 import type { Row } from "../rows.ts";
@@ -84,38 +84,45 @@ export function bootAgent(cfg: Cfg, io: HTMLInputElement): void {
   };
 
   /**
-   * One turn. The visitor's line prints at once; then the agent "works" (a spinner, a cat verb and
-   * the seconds) and its answer prints in line by line. Esc stops it, and says so. Reduced motion
-   * gets the whole turn at once.
+   * One turn. The visitor's line prints at once; then the agent "works" (a spinner, a cat verb, the
+   * time and the effort it thinks with) while the status line says how to stop it, and its answer
+   * prints in piece by piece. Esc stops it, and says so. Reduced motion gets the whole turn at once.
+   * Pieces are functions so a closing line can read the clock when it prints, not when it is queued.
    */
   let working: { stop: () => void } | null = null;
-  const turn = (rows: Row[]) => {
-    if (still() || rows.length < 2) { append(renderRowsHtml(rows)); return; }
-    const [you, ...answer] = rows;
-    log.insertAdjacentHTML("beforeend", renderRowsHtml([you!]));
+  const effortWord = cfg.effort.labels.at(-1)!;
+  const turn = (you: Row, pieces: (() => string)[], think: number) => {
+    if (still()) { append(renderRowsHtml([you]) + pieces.map((p) => p()).join("")); return; }
+    log.insertAdjacentHTML("beforeend", renderRowsHtml([you]));
     const w = document.createElement("div");
-    w.className = "row working";
+    w.className = "working";
     log.append(w);
     toEnd();
+    statusLeft.textContent = cfg.interruptHint;
     const verb = cfg.verbs[Math.floor(Math.random() * cfg.verbs.length)]!;
     const t0 = performance.now();
     let frame = 0;
     const tick = () => {
-      w.innerHTML = `<span class="muted" style="--c:0">${esc(workingLine(verb, frame++, Math.floor((performance.now() - t0) / 1000)))}</span>`;
+      w.innerHTML = renderRowsHtml([{ runs: workingRuns(verb, frame++, Math.floor((performance.now() - t0) / 1000), effortWord) }]);
     };
     tick();
     const spin = window.setInterval(tick, 110);
     const timers: number[] = [];
-    const done = () => { working = null; log.insertAdjacentHTML("beforeend", `<div class="row"></div>`); toEnd(); };
+    const done = () => {
+      working = null;
+      statusLeft.textContent = cfg.shortcutsHint;
+      log.insertAdjacentHTML("beforeend", `<div class="row"></div>`);
+      toEnd();
+    };
     timers.push(window.setTimeout(() => {
       window.clearInterval(spin);
       w.remove();
-      answer.forEach((r, i) => timers.push(window.setTimeout(() => {
-        log.insertAdjacentHTML("beforeend", renderRowsHtml([r]));
+      pieces.forEach((p, i) => timers.push(window.setTimeout(() => {
+        log.insertAdjacentHTML("beforeend", p());
         toEnd();
-        if (i === answer.length - 1) done();
-      }, i * 45)));
-    }, 450 + Math.min(650, rows.length * 90)));
+        if (i === pieces.length - 1) done();
+      }, i * (pieces.length > 6 ? 110 : 45))));
+    }, think));
     working = {
       stop: () => {
         window.clearInterval(spin);
@@ -127,6 +134,28 @@ export function bootAgent(cfg: Cfg, io: HTMLInputElement): void {
         done();
       },
     };
+  };
+  const rowsTurn = (rows: Row[]) => {
+    const [you, ...answer] = rows;
+    turn(you!, answer.map((r) => () => renderRowsHtml([r])), 450 + Math.min(650, rows.length * 90));
+  };
+
+  /**
+   * A project's scripted talk, the way an agent CLI answers: what it read, its opening line on a
+   * bullet, the body block by block, and how long it took. Written at build from `talks/<repo>.md`.
+   */
+  const talkTurn = (typed: string, t: Talk) => {
+    const started = Date.now();
+    const blocks = [...new DOMParser().parseFromString(t.html, "text/html").body.children].map((el) => el.outerHTML);
+    const line = (runs: Row["runs"]) => renderRowsHtml([{ runs }]);
+    turn(exchangeRows(cfg, typed)[0]!, [
+      () => line([{ col: 2, text: `Read ${t.source}`, style: "muted" }]) + `<div class="row"></div>`,
+      () => line([{ col: 0, text: CALL, style: "text" }, { col: 2, text: t.lead }]) + `<div class="row"></div>`,
+      ...blocks.map((b) => () => `<div class="talk md">${b}</div>`),
+      () => line([{ col: 0, text: cfg.talkDone
+        .replace("{seconds}", String(Math.max(1, Math.round((Date.now() - started) / 1000))))
+        .replace("{time}", new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })), style: "muted" }]),
+    ], 1300 + Math.floor(Math.random() * 700));
   };
 
   /**
@@ -202,8 +231,10 @@ export function bootAgent(cfg: Cfg, io: HTMLInputElement): void {
     if (normalize(typed) === "/effort") { openPanel(); return; }
     if (typed === "exit" || typed === "q") { window.location.assign("/"); return; }
     if (typed === "clear") { log.innerHTML = ""; return; }
+    const talk = cfg.talks[normalize(typed)];
+    if (talk) { talkTurn(typed, talk); return; }
     const known = normalize(typed) in cfg.output;
-    turn(known ? exchangeRows(cfg, typed) : deflectionRows(typed, deflect(cfg, Math.random, typed)));
+    rowsTurn(known ? exchangeRows(cfg, typed) : deflectionRows(typed, deflect(cfg, Math.random, typed)));
   };
 
   // Ctrl+C: stops the agent, else clears the line, else asks once before leaving.

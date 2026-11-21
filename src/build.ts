@@ -13,7 +13,7 @@ import { motdRows } from "./motd.ts";
 import { promptRows } from "./shell.ts";
 import { readerHtml, shellHtml, screenHtml, nappingHtml, notFoundHtml } from "./html.ts";
 import { resumeRows, privacyRows, contactRows, nappingCfg } from "./screens.ts";
-import { nappingRows, statusRight, workingLine, SPINNER } from "./napping.ts";
+import { nappingRows, statusRight, workingRuns, SPINNER } from "./napping.ts";
 
 const OUT = new URL("../dist/", import.meta.url);
 
@@ -60,7 +60,8 @@ const nappingClientText = (c: Content): string => {
   const r = statusRight(cfg);
   return [n.placeholder, n.tips, n.cwd, n.shortcutsHint, n.exitConfirm, n.interrupted, r.text, r.wide,
     ...n.shortcuts.flatMap((x) => [x.keys, x.what]), ...n.commands.flatMap((x) => [x.cmd, x.blurb]),
-    workingLine("x", 0, 0), ...SPINNER].join("");
+    ...workingRuns("x", 0, 0, cfg.effort.labels.join("")).map((r) => r.text), "0123456789m", n.talkDone, n.groupHint, n.interruptHint,
+    ...Object.values(cfg.talks).flatMap((t) => [t.lead, t.source, t.html.replace(/<[^>]*>/g, "").replace(/&[a-z]+;|&#\d+;/g, "")]), ...SPINNER].join("");
 };
 
 const ASCII = Array.from({ length: 0x7f - 0x20 }, (_, i) => String.fromCodePoint(0x20 + i)).join("");

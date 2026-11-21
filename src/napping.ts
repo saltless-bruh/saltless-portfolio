@@ -1,4 +1,4 @@
-import type { Row } from "./rows.ts";
+import type { Row, Run } from "./rows.ts";
 import { decide, type Brain } from "./client/brain.ts";
 import type { EffortCfg } from "./client/effort.ts";
 
@@ -16,6 +16,8 @@ export const CALL = "\u25cf";
 export const RESULT = "\u2570";
 /** `\u23bf` is absent from JetBrains Mono, so the result glyph is the one that renders. */
 
+export type Talk = { lead: string; html: string; source: string };
+
 export type NappingCfg = {
   version: string;
   model: string;
@@ -28,6 +30,13 @@ export type NappingCfg = {
   shortcutsHint: string;
   shortcuts: { keys: string; what: string }[];
   exitConfirm: string;
+  talkDone: string;
+  interruptHint: string;
+  /**
+   * The scripted talk per project command, rendered at build from `talks/<repo>.md`: the opening
+   * line, the rest as HTML, and the file the "agent" says it read.
+   */
+  talks: Record<string, Talk>;
   interrupted: string;
   commands: { cmd: string; blurb: string }[];
   calls: Record<string, string>;
@@ -65,9 +74,29 @@ export function statusRight(c: NappingCfg): { text: string; wide: string } {
 /** The classic terminal spinner: plain ASCII, so the subset font always has it. */
 export const SPINNER = ["|", "/", "-", "\\"] as const;
 
-/** The line shown while the agent "works": a spinner frame, a cat verb, the seconds, and the way out. */
-export const workingLine = (verb: string, frame: number, seconds: number): string =>
-  `${SPINNER[frame % SPINNER.length]} ${verb}\u2026 (${seconds}s \u00b7 esc to interrupt)`;
+/** Elapsed time the way an agent CLI prints it: `7s`, then `1m 53s`. */
+const elapsed = (s: number): string => (s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`);
+
+/**
+ * The line shown while the agent "works", as styled runs: a spinner frame and a cat verb in the
+ * accent, the time muted, and the effort it is thinking with picked out. The way to stop it lives in
+ * the status line meanwhile, where an agent CLI puts it.
+ */
+export function workingRuns(verb: string, frame: number, seconds: number, effort: string): Run[] {
+  const spin = `${SPINNER[frame % SPINNER.length]} `;
+  const word = `${verb}\u2026 `;
+  const time = `(${elapsed(seconds)} \u00b7 `;
+  const think = `thinking with ${effort} effort`;
+  let col = 0;
+  const at = (n: string): number => { const c = col; col += [...n].length; return c; };
+  return [
+    { col: at(spin), text: spin, style: "accent" },
+    { col: at(word), text: word, style: "accent" },
+    { col: at(time), text: time, style: "muted" },
+    { col: at(think), text: think, style: "warning" },
+    { col: at(")"), text: ")", style: "muted" },
+  ];
+}
 
 /** How a typed line is looked up: spacing and case never decide whether a command exists. */
 export const normalize = (typed: string): string => typed.trim().replace(/\s+/g, " ").toLowerCase();
