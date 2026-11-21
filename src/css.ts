@@ -140,6 +140,17 @@ ${gridCss()}
 
 .term { padding-bottom: calc(var(--cell-h) * 3) }
 
+/* napping's input band: pinned to the window's bottom between two rules, with a hint line under it,
+   the shape every agent CLI has. The conversation scrolls above it; the client keeps the term's
+   bottom padding equal to the band's height, which grows while /effort's panel is open. */
+.agent #head { border-bottom: 1px solid var(--border); margin-bottom: var(--cell-h) }
+#band {
+  position: fixed; left: var(--gutter); right: var(--gutter); bottom: 0;
+  background: var(--bg); padding-bottom: calc(var(--cell-h) * .5);
+}
+#band #prompt { border-block: 1px solid var(--border); padding-block: calc(var(--cell-h) * .25) }
+.term.agent { padding-bottom: calc(var(--cell-h) * 4) }
+
 /* The agent's startup: the Mascot with the startup block beside her, the way an agent CLI prints
    its mark and its version side by side. Below roughly ${MASCOT_COLS + 30} columns there is no room for
    both, and the block drops underneath instead of crushing either. A flex wrap, not a breakpoint,

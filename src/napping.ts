@@ -22,6 +22,8 @@ export type NappingCfg = {
   status: string;
   verbs: string[];
   boot: string;
+  placeholder: string;
+  footer: string;
   commands: { cmd: string; blurb: string }[];
   calls: Record<string, string>;
   output: Record<string, string[]>;

@@ -75,3 +75,25 @@ test("the rules still come before any chance", () => {
   assert.equal(deflect(cfg, ALWAYS, "sudo rm -rf").result, "Shame on you.");
   assert.equal(deflect(cfg, ALWAYS, "/nope").result, "unknown command. try /help, or don't.");
 });
+
+test("napping reads as an agent CLI: no title row, a divider, an input band with a hint under it", async () => {
+  const { nappingHtml } = await import("../src/html.ts");
+  const c = loadContent();
+  const html = nappingHtml(c, "");
+  const head = html.slice(html.indexOf('<div id="head">'), html.indexOf('<div id="log"'));
+  assert.doesNotMatch(head, /accent-bold" style="--c:0">napping<\/span><\/div>\s*<div class="row"><\/div>\s*<div class="agent-head/, "the stray title row is gone");
+  assert.ok(html.indexOf('id="band"') > html.indexOf('id="log"'), "the band comes after the conversation");
+  const band = html.slice(html.indexOf('<div id="band">'));
+  assert.match(band, /<div id="prompt">/);
+  assert.ok(band.includes(c.napping.placeholder), "the empty prompt says what to try");
+  assert.ok(band.includes(c.napping.footer), "a hint line sits under the prompt");
+  assert.match(c.napping.footer, /\/help/);
+  assert.match(c.napping.footer, /esc/i);
+});
+
+test("each turn in the log is followed by a blank row, the boot turn included", async () => {
+  const { nappingHtml } = await import("../src/html.ts");
+  const html = nappingHtml(loadContent(), "");
+  const log = html.slice(html.indexOf('<div id="log"'), html.indexOf('<div id="band">'));
+  assert.match(log, /<div class="row"><\/div>\s*<\/div>\s*$/, "the boot exchange ends with a blank row inside the log");
+});

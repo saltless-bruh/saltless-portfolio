@@ -17,6 +17,8 @@ import type { EffortCfg } from "./client/effort.ts";
 export type NappingContent = {
   effort: EffortCfg;
   version: string; model: string; status: string; verbs: string[]; boot: string;
+  /** The empty prompt's muted suggestion, and the hint line under the input band. */
+  placeholder: string; footer: string;
   commands: { cmd: string; blurb: string }[];
   calls: Record<string, string>;
   /** Which résumé lane each group command lists. */
@@ -168,6 +170,8 @@ export function validateContent(raw: unknown): Content {
     status: str(n.status, "napping.status"),
     verbs: arr(n.verbs, "napping.verbs").map((v, i) => str(v, `napping.verbs[${i}]`)),
     boot: str(n.boot, "napping.boot"),
+    placeholder: str(n.placeholder, "napping.placeholder"),
+    footer: str(n.footer, "napping.footer"),
     commands: arr(n.commands, "napping.commands").map((v, i) => {
       const o = obj(v, `napping.commands[${i}]`);
       return { cmd: str(o.cmd, `napping.commands[${i}].cmd`), blurb: str(o.blurb, `napping.commands[${i}].blurb`) };

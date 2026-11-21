@@ -27,12 +27,22 @@ export function bootAgent(cfg: Cfg, io: HTMLInputElement): void {
     const typed = io.value;
     cmdline.innerHTML = sigil
       + `<span class="text" style="--c:${cfg.inputCol}">${esc(typed)}</span>`
-      + `<span class="caret" style="--c:${cfg.inputCol + [...typed].length}"> </span>`;
+      + `<span class="caret" style="--c:${cfg.inputCol + [...typed].length}"> </span>`
+      // The empty prompt suggests a start, muted, and gives way to the first keystroke.
+      + (typed ? "" : `<span class="muted ph" style="--c:${cfg.inputCol + 1}">${esc(cfg.placeholder)}</span>`);
   };
+
+  // The input band is pinned to the bottom, so the conversation needs room under it; the band grows
+  // while /effort's panel is open, which is why the room is measured rather than fixed.
+  const band = document.querySelector<HTMLElement>("#band");
+  if (band && "ResizeObserver" in window) {
+    new ResizeObserver(() => { term.style.paddingBottom = `${band.offsetHeight}px`; }).observe(band);
+  }
+  const toEnd = () => window.scrollTo({ top: document.documentElement.scrollHeight });
 
   const append = (html: string) => {
     log.insertAdjacentHTML("beforeend", html + `<div class="row"></div>`);
-    cmdline.scrollIntoView({ block: "nearest" });
+    toEnd();
   };
 
   /**
@@ -48,7 +58,7 @@ export function bootAgent(cfg: Cfg, io: HTMLInputElement): void {
     panel = { s: openEffort(cfg.effort), el: document.querySelector<HTMLElement>("#effort")!, busy: false, flipping: false };
     cmdline.style.display = "none";
     draw();
-    panel.el.scrollIntoView({ block: "nearest" });
+    toEnd();
   };
   const closePanel = (call: string | undefined, result: string) => {
     panel?.el.remove();

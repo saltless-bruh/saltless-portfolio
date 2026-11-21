@@ -53,9 +53,8 @@ const config = (c: Content, active: string | null, fs?: Node, bootEnd = 0): stri
 /** The agent screen. Its boot exchange is already in the document; the timeline only reveals it. */
 export function nappingHtml(c: Content, font: string): string {
   const cfg = nappingCfg(c);
-  const body = `  <main class="term" id="term" data-focus="off">
+  const body = `  <main class="term agent" id="term" data-focus="off">
     <div id="head">
-${renderRowsHtml([{ runs: [{ col: 0, text: "napping", style: "accent-bold" }] }, { runs: [] }])}
       <div class="agent-head">
         ${mascotSvg()}
         <div class="startup">
@@ -66,10 +65,13 @@ ${renderRowsHtml(startupRows(cfg))}
     </div>
     <div id="log" aria-live="polite">
 ${renderRowsHtml(exchangeRows(cfg, cfg.boot, "boot"))}
+      <div class="row"></div>
     </div>
-    <div class="row"></div>
-    <div id="prompt">
-      <div class="row cmdline"><span class="accent" style="--c:0">${esc(AGENT_PROMPT)}</span></div>
+    <div id="band">
+      <div id="prompt">
+        <div class="row cmdline"><span class="accent" style="--c:0">${esc(AGENT_PROMPT)}</span><span class="muted ph" style="--c:${AGENT_INPUT_COL + 1}">${esc(cfg.placeholder)}</span></div>
+      </div>
+      <div class="row band-hint"><span class="muted" style="--c:0">${esc(cfg.footer)}</span></div>
     </div>
   </main>
   <label class="io" for="io">command</label>

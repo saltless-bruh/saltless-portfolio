@@ -159,6 +159,8 @@
       "Kneading"
     ],
     "boot": "/agent-infra",
+    "placeholder": "try /help",
+    "footer": "/help for commands \u00b7 /effort \u00b7 esc back to the shell",
     "commands": [
       {
         "cmd": "/agent-infra",
