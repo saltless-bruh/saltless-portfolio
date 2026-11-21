@@ -23,7 +23,12 @@ export type NappingCfg = {
   verbs: string[];
   boot: string;
   placeholder: string;
-  footer: string;
+  cwd: string;
+  tips: string;
+  shortcutsHint: string;
+  shortcuts: { keys: string; what: string }[];
+  exitConfirm: string;
+  interrupted: string;
   commands: { cmd: string; blurb: string }[];
   calls: Record<string, string>;
   output: Record<string, string[]>;
@@ -38,11 +43,39 @@ export type NappingCfg = {
   effort: EffortCfg;
 };
 
+/**
+ * The commands a half-typed `/word` could become: the menu an agent CLI opens under its input. Only
+ * while the line is a single slash word; a space means an argument has started and the menu closes.
+ */
+export function slashMenu(c: NappingCfg, typed: string): { cmd: string; blurb: string }[] {
+  const t = typed.trimStart().toLowerCase();
+  if (!t.startsWith("/") || /\s/.test(t)) return [];
+  return c.commands.filter((m) => m.cmd.toLowerCase().startsWith(t));
+}
+
+/**
+ * The status line's right half. `text` always shows; `wide` is appended only where the screen has the
+ * columns for it, so the line never wraps on a phone. /effort is rigged to end on the last level with
+ * the toggle on, so this is what it always says.
+ */
+export function statusRight(c: NappingCfg): { text: string; wide: string } {
+  return { text: `effort: ${c.effort.labels.at(-1)}`, wide: ` \u00b7 ${c.effort.toggleWord.toLowerCase()} on` };
+}
+
+/** The classic terminal spinner: plain ASCII, so the subset font always has it. */
+export const SPINNER = ["|", "/", "-", "\\"] as const;
+
+/** The line shown while the agent "works": a spinner frame, a cat verb, the seconds, and the way out. */
+export const workingLine = (verb: string, frame: number, seconds: number): string =>
+  `${SPINNER[frame % SPINNER.length]} ${verb}\u2026 (${seconds}s \u00b7 esc to interrupt)`;
+
 /** How a typed line is looked up: spacing and case never decide whether a command exists. */
 export const normalize = (typed: string): string => typed.trim().replace(/\s+/g, " ").toLowerCase();
 
 const line = (text: string, style?: Row["runs"][number]["style"], col = 0): Row =>
   ({ runs: [{ col, text, style }] });
+
+const you = (cls?: string): string => [cls, "you"].filter(Boolean).join(" ");
 
 /** The startup block an agent CLI prints on launch: who it is, what it runs on, how it is doing. */
 export function startupRows(c: NappingCfg): Row[] {
@@ -53,6 +86,7 @@ export function startupRows(c: NappingCfg): Row[] {
     ] },
     { runs: [{ col: 0, text: "model:", style: "muted" }, { col: 8, text: c.model }] },
     { runs: [{ col: 0, text: "status:", style: "muted" }, { col: 8, text: c.status }] },
+    { runs: [{ col: 0, text: "cwd:", style: "muted" }, { col: 8, text: c.cwd, style: "muted" }] },
   ];
 }
 
@@ -61,7 +95,8 @@ export function exchangeRows(c: NappingCfg, typed: string, cls?: string): Row[] 
   const key = normalize(typed);
   const out = c.output[key];
   const call = c.calls[key] ?? c.calls[key.split(" ")[0]!];
-  const rows: Row[] = [{ cls, runs: [
+  // The visitor's own line is the "you" turn: shaded, the way an agent CLI sets your message apart.
+  const rows: Row[] = [{ cls: you(cls), runs: [
     { col: 0, text: PROMPT, style: "accent" },
     { col: 2, text: typed },
   ] }];
@@ -116,7 +151,7 @@ export function deflect(c: NappingCfg, roll: () => number, input: string): Defle
 }
 
 export function deflectionRows(typed: string, d: Deflection, cls?: string): Row[] {
-  const rows: Row[] = [{ cls, runs: [
+  const rows: Row[] = [{ cls: you(cls), runs: [
     { col: 0, text: PROMPT, style: "accent" },
     { col: 2, text: typed },
   ] }];

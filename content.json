@@ -160,7 +160,18 @@
     ],
     "boot": "/help",
     "placeholder": "try /help",
-    "footer": "/help for commands \u00b7 /effort \u00b7 esc back to the shell",
+    "cwd": "~/saltless-bruh/agents",
+    "tips": "Tips: /help lists commands, /agent-infra shows the agents",
+    "shortcutsHint": "? for shortcuts",
+    "shortcuts": [
+      { "keys": "/", "what": "commands, with a menu as you type" },
+      { "keys": "tab", "what": "complete the picked command" },
+      { "keys": "\u2191 \u2193", "what": "pick in the menu, or walk your history" },
+      { "keys": "esc", "what": "clear the line, then back to the shell" },
+      { "keys": "ctrl+c twice", "what": "leave" }
+    ],
+    "exitConfirm": "Press Ctrl-C again to exit",
+    "interrupted": "Interrupted. Nothing was asked of the agents.",
     "commands": [
       {
         "cmd": "/agent-infra",

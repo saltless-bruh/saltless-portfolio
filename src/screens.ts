@@ -138,7 +138,8 @@ export function nappingCfg(c: Content): NappingCfg {
   const examples = JSON.parse(readFileSync(new URL("../brain/examples.json", import.meta.url), "utf8")) as { train: Record<string, string[]> };
   return {
     version: n.version, model: n.model, status: n.status, verbs: n.verbs, boot: n.boot,
-    placeholder: n.placeholder, footer: n.footer,
+    placeholder: n.placeholder, cwd: n.cwd, tips: n.tips, shortcutsHint: n.shortcutsHint,
+    shortcuts: n.shortcuts, exitConfirm: n.exitConfirm, interrupted: n.interrupted,
     commands: n.commands, calls: n.calls, deflect: n.deflect, output, brain: train(examples.train), effort: n.effort,
   };
 }

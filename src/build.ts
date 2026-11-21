@@ -13,7 +13,7 @@ import { motdRows } from "./motd.ts";
 import { promptRows } from "./shell.ts";
 import { readerHtml, shellHtml, screenHtml, nappingHtml, notFoundHtml } from "./html.ts";
 import { resumeRows, privacyRows, contactRows, nappingCfg } from "./screens.ts";
-import { nappingRows } from "./napping.ts";
+import { nappingRows, statusRight, workingLine, SPINNER } from "./napping.ts";
 
 const OUT = new URL("../dist/", import.meta.url);
 
@@ -53,6 +53,16 @@ function assertNarrowSafe(rows: Row[], cols: number): void {
   }
 }
 
+/** Text the /napping client writes itself, or the page renders outside composed rows. */
+const nappingClientText = (c: Content): string => {
+  const n = c.napping;
+  const cfg = nappingCfg(c);
+  const r = statusRight(cfg);
+  return [n.placeholder, n.tips, n.cwd, n.shortcutsHint, n.exitConfirm, n.interrupted, r.text, r.wide,
+    ...n.shortcuts.flatMap((x) => [x.keys, x.what]), ...n.commands.flatMap((x) => [x.cmd, x.blurb]),
+    workingLine("x", 0, 0), ...SPINNER].join("");
+};
+
 const ASCII = Array.from({ length: 0x7f - 0x20 }, (_, i) => String.fromCodePoint(0x20 + i)).join("");
 
 export type BuildResult = { html: string; bytes: number; scriptBytes: number; glyphs: number; fontBytes: number };
@@ -87,7 +97,7 @@ export async function build(content?: Content): Promise<BuildResult> {
   const rendered = ops.docs.map((d) => ({ d, html: renderDoc(d.src, { dir: d.dir, links, assets }) }));
   const covered = fontCoverage(ttf);
   const opsGlyphs = [...new Set(ops.docs.flatMap((d) => [...d.src]))].filter((ch) => covered.has(ch.codePointAt(0)!) && !FORBIDDEN_GLYPHS.includes(ch)).join("");
-  const glyphs = [...new Set(ASCII + charsUsed(all) + c.hint + c.notFound + c.sudo.join("") + Object.values(c.napping.deflect).join("") + c.napping.verbs.join(""))].sort().join("");
+  const glyphs = [...new Set(ASCII + charsUsed(all) + c.hint + c.notFound + c.sudo.join("") + Object.values(c.napping.deflect).join("") + c.napping.verbs.join("") + nappingClientText(c))].sort().join("");
   for (const bad of FORBIDDEN_GLYPHS) {
     if (glyphs.includes(bad)) throw new Error(`the page uses ${bad}, which JetBrains Mono does not carry`);
   }

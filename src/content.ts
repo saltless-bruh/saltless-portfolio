@@ -18,7 +18,15 @@ export type NappingContent = {
   effort: EffortCfg;
   version: string; model: string; status: string; verbs: string[]; boot: string;
   /** The empty prompt's muted suggestion, and the hint line under the input band. */
-  placeholder: string; footer: string;
+  placeholder: string;
+  /** The welcome box's working directory line and its one line of tips. */
+  cwd: string; tips: string;
+  /** The status line's left half, and the panel `?` opens. */
+  shortcutsHint: string; shortcuts: { keys: string; what: string }[];
+  /** Said in the status line after one Ctrl+C on an empty prompt. */
+  exitConfirm: string;
+  /** The result of Esc while the agent is working. */
+  interrupted: string;
   commands: { cmd: string; blurb: string }[];
   calls: Record<string, string>;
   /** Which résumé lane each group command lists. */
@@ -171,7 +179,15 @@ export function validateContent(raw: unknown): Content {
     verbs: arr(n.verbs, "napping.verbs").map((v, i) => str(v, `napping.verbs[${i}]`)),
     boot: str(n.boot, "napping.boot"),
     placeholder: str(n.placeholder, "napping.placeholder"),
-    footer: str(n.footer, "napping.footer"),
+    cwd: str(n.cwd, "napping.cwd"),
+    tips: str(n.tips, "napping.tips"),
+    shortcutsHint: str(n.shortcutsHint, "napping.shortcutsHint"),
+    shortcuts: arr(n.shortcuts, "napping.shortcuts").map((v, i) => {
+      const o = obj(v, `napping.shortcuts[${i}]`);
+      return { keys: str(o.keys, `napping.shortcuts[${i}].keys`), what: str(o.what, `napping.shortcuts[${i}].what`) };
+    }),
+    exitConfirm: str(n.exitConfirm, "napping.exitConfirm"),
+    interrupted: str(n.interrupted, "napping.interrupted"),
     commands: arr(n.commands, "napping.commands").map((v, i) => {
       const o = obj(v, `napping.commands[${i}]`);
       return { cmd: str(o.cmd, `napping.commands[${i}].cmd`), blurb: str(o.blurb, `napping.commands[${i}].blurb`) };

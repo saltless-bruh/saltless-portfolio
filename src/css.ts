@@ -96,7 +96,7 @@ ${gridCss()}
   white-space: pre;
 }
 /* Kali's right prompt: the last failure's exit status, pinned to the row's right edge. */
-.row > span.rprompt { left: auto; right: 0 }
+.row > span.rprompt, .row > span.rprompt:last-child { position: absolute; left: auto; right: 0; margin-left: 0; white-space: pre }
 .caret { background: var(--accent); color: var(--bg); animation: blink 1.06s step-end infinite }
 @keyframes blink { 0%, 50% { opacity: 1 } 50.01%, 100% { opacity: 0 } }
 @media (prefers-reduced-motion: reduce) { .caret { animation: none } }
@@ -146,16 +146,28 @@ ${gridCss()}
 }
 .pager:hover, .pager:focus-visible { background: var(--accent); outline: none }
 
-/* napping's input band: pinned to the window's bottom between two rules, with a hint line under it,
-   the shape every agent CLI has. The conversation scrolls above it; the client keeps the term's
-   bottom padding equal to the band's height, which grows while /effort's panel is open. */
-.agent #head { border-bottom: 1px solid var(--border); margin-bottom: var(--cell-h) }
+/* napping, shaped like an agent CLI. Boxes are drawn the way a terminal UI draws them, one cell of
+   padding inside a rounded hairline, and every box shares the same small radius. */
+.agent .welcome, .agent .box {
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: calc(var(--cell-h) * .5) var(--cell-w);
+}
+.agent .welcome { border-color: var(--accent); margin-bottom: var(--cell-h) }
+/* The input band: pinned to the window's bottom, the conversation scrolling above it. The client
+   keeps the term's bottom padding equal to the band's height, which grows with the menu. */
 #band {
   position: fixed; left: var(--gutter); right: var(--gutter); bottom: 0;
-  background: var(--bg); padding-bottom: calc(var(--cell-h) * .5);
+  background: var(--bg); padding-block: calc(var(--cell-h) * .5);
 }
-#band #prompt { border-block: 1px solid var(--border); padding-block: calc(var(--cell-h) * .25) }
-.term.agent { padding-bottom: calc(var(--cell-h) * 4) }
+.agent .box { padding-block: calc(var(--cell-h) * .25) }
+.term.agent { padding-bottom: calc(var(--cell-h) * 5) }
+/* Your own turn, set apart on a faint strip, the way an agent CLI shades the user's message. */
+.agent .row.you { background: var(--surface) }
+#menu { padding-block: calc(var(--cell-h) * .25) }
+#menu .item { cursor: pointer }
+#menu .item.sel { background: var(--surface) }
+.agent .status { margin-top: calc(var(--cell-h) * .25) }
+@container screen (max-width: 520px) { .agent .status .wide { display: none } }
 
 /* The agent's startup: the Mascot with the startup block beside her, the way an agent CLI prints
    its mark and its version side by side. Below roughly ${MASCOT_COLS + 30} columns there is no room for

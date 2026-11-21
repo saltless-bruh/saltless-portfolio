@@ -7,7 +7,7 @@ import { resumeRows, privacyRows, contactRows, nappingCfg } from "./screens.ts";
 import type { Node } from "./client/fs.ts";
 import { run, type Cfg } from "./client/commands.ts";
 import { bootSchedule, bootCss, BOOT_GATE } from "./boot.ts";
-import { startupRows, exchangeRows, nappingRows, AGENT_INPUT_COL } from "./napping.ts";
+import { startupRows, exchangeRows, nappingRows, AGENT_INPUT_COL, statusRight } from "./napping.ts";
 import { mascotSvg } from "./mascot.ts";
 import { PROMPT as AGENT_PROMPT } from "./napping.ts";
 import type { Row } from "./rows.ts";
@@ -53,8 +53,9 @@ const config = (c: Content, active: string | null, fs?: Node, bootEnd = 0): stri
 /** The agent screen. Its boot exchange is already in the document; the timeline only reveals it. */
 export function nappingHtml(c: Content, font: string): string {
   const cfg = nappingCfg(c);
+  const right = statusRight(cfg);
   const body = `  <main class="term agent" id="term" data-focus="off">
-    <div id="head">
+    <div id="head" class="welcome">
       <div class="agent-head">
         ${mascotSvg()}
         <div class="startup">
@@ -62,16 +63,18 @@ ${renderRowsHtml(startupRows(cfg))}
         </div>
       </div>
       <div class="row"></div>
+      <div class="row tips"><span class="muted" style="--c:0">${esc(cfg.tips)}</span></div>
     </div>
     <div id="log" aria-live="polite">
 ${renderRowsHtml(exchangeRows(cfg, cfg.boot, "boot"))}
       <div class="row"></div>
     </div>
     <div id="band">
-      <div id="prompt">
+      <div id="prompt" class="box">
         <div class="row cmdline"><span class="accent" style="--c:0">${esc(AGENT_PROMPT)}</span><span class="muted ph" style="--c:${AGENT_INPUT_COL + 1}">${esc(cfg.placeholder)}</span></div>
       </div>
-      <div class="row band-hint"><span class="muted" style="--c:0">${esc(cfg.footer)}</span></div>
+      <div id="menu" role="listbox" aria-label="commands" hidden></div>
+      <div class="row status"><span class="muted" id="status-left" style="--c:0">${esc(cfg.shortcutsHint)}</span><span class="muted rprompt">${esc(right.text)}<span class="wide">${esc(right.wide)}</span></span></div>
     </div>
   </main>
   <label class="io" for="io">command</label>
