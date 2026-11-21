@@ -65,6 +65,8 @@ export type Content = {
   napping: NappingContent;
   privacy: Section[];
   contact: ContactContent;
+  /** The room on `/`: the hint under it, its description, and the two monitors' labels. */
+  room: { hint: string; alt: string; wake: string; napping: string };
 };
 
 /**
@@ -280,6 +282,7 @@ export function validateContent(raw: unknown): Content {
     napping,
     privacy,
     contact,
+    room: (() => { const r = obj(c.room, "room"); return { hint: str(r.hint, "room.hint"), alt: str(r.alt, "room.alt"), wake: str(r.wake, "room.wake"), napping: str(r.napping, "room.napping") }; })(),
   };
   assertNoForbiddenNames(JSON.stringify(out), "content.json");
   return out;

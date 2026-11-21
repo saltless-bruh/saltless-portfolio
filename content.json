@@ -298,6 +298,12 @@
       ]
     }
   ],
+  "room": {
+    "hint": "click the monitor to wake the shell \u00b7 or press Enter",
+    "alt": "A dark bedroom at night. The operator is asleep in bed under a lamp; a grey cat sleeps on one of two servers by a window onto a moonlit pine forest; two monitors glow on the desk.",
+    "wake": "wake the shell",
+    "napping": "open napping"
+  },
   "contact": {
     "links": [
       {

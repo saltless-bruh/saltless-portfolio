@@ -13,6 +13,7 @@ import { motdRows } from "./motd.ts";
 import { promptRows } from "./shell.ts";
 import { readerHtml, shellHtml, screenHtml, nappingHtml, notFoundHtml } from "./html.ts";
 import { resumeRows, privacyRows, contactRows, nappingCfg } from "./screens.ts";
+import { ROOM_ASSETS } from "./room.ts";
 import { nappingRows, statusRight, workingRuns, SPINNER } from "./napping.ts";
 
 const OUT = new URL("../dist/", import.meta.url);
@@ -126,6 +127,14 @@ export async function build(content?: Content): Promise<BuildResult> {
     const dir = new URL(`.${d.href}/`, OUT);
     mkdirSync(dir, { recursive: true });
     writeFileSync(new URL("index.html", dir), readerHtml(c, readerFont, d.title, body, ["ops", ...d.path].join("/")));
+  }
+  // The room's art: the scene and the cat's frames. A missing file is a broken entrance, so it stops
+  // the build rather than shipping a page that points at nothing.
+  mkdirSync(new URL("room/", OUT), { recursive: true });
+  for (const name of ROOM_ASSETS) {
+    const from = new URL(`../art/room/${name}`, import.meta.url);
+    if (!existsSync(from)) throw new Error(`art/room/${name} is missing`);
+    copyFileSync(from, new URL(`room/${name}`, OUT));
   }
   for (const a of ops.assets) {
     const to = new URL(`ops/${a.path.join("/")}`, OUT);
