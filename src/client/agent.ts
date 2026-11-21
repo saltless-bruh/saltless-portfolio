@@ -1,5 +1,5 @@
 import { createTimeline } from "animejs";
-import { renderRowsHtml } from "../rows.ts";
+import { renderRowsHtml, rowWidth } from "../rows.ts";
 import { openEffort, move, slideBack, effortRows, confirmReply, type EffortState } from "./effort.ts";
 import {
   RESULT, exchangeRows, deflect, deflectionRows, normalize, slashMenu, workingLine, type NappingCfg,
@@ -135,17 +135,24 @@ export function bootAgent(cfg: Cfg, io: HTMLInputElement): void {
    * the walk and `flipping` the toggle's snap-back, so a second press cannot double either.
    */
   let panel: { s: EffortState; el: HTMLElement; busy: boolean; flipping: boolean } | null = null;
-  const draw = () => { if (panel) panel.el.innerHTML = renderRowsHtml(effortRows(cfg.effort, panel.s)); };
+  // The panel takes the input box's place at full width; its rows are a fixed column layout, so the
+  // block is sized to its widest row and centred in the box.
+  const draw = () => {
+    if (!panel) return;
+    const rows = effortRows(cfg.effort, panel.s);
+    panel.el.style.width = `calc(${Math.max(...rows.map(rowWidth))} * var(--cell-w))`;
+    panel.el.innerHTML = renderRowsHtml(rows);
+  };
   const openPanel = () => {
-    box.insertAdjacentHTML("beforebegin", `<div id="effort"></div>`);
-    panel = { s: openEffort(cfg.effort), el: document.querySelector<HTMLElement>("#effort")!, busy: false, flipping: false };
+    box.insertAdjacentHTML("beforebegin", `<div id="effort" class="box"><div class="effort-in"></div></div>`);
+    panel = { s: openEffort(cfg.effort), el: document.querySelector<HTMLElement>("#effort .effort-in")!, busy: false, flipping: false };
     box.style.display = "none";
     menu.hidden = true;
     draw();
     toEnd();
   };
   const closePanel = (call: string | undefined, result: string) => {
-    panel?.el.remove();
+    document.querySelector("#effort")?.remove();
     panel = null;
     box.style.display = "";
     append(renderRowsHtml(deflectionRows("/effort", { call, result, style: "muted" })));

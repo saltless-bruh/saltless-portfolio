@@ -163,6 +163,10 @@ ${gridCss()}
 .term.agent { padding-bottom: calc(var(--cell-h) * 5) }
 /* Your own turn, set apart on a faint strip, the way an agent CLI shades the user's message. */
 .agent .row.you { background: var(--surface) }
+/* /effort opens in the input box's place: the same full-width box, lit while it owns the keyboard,
+   its fixed-column block centred and never wider than the box. */
+#effort { border-color: var(--accent); padding-block: calc(var(--cell-h) * .5) }
+#effort .effort-in { margin-inline: auto; max-width: 100% }
 #menu { padding-block: calc(var(--cell-h) * .25) }
 #menu .item { cursor: pointer }
 #menu .item.sel { background: var(--surface) }
