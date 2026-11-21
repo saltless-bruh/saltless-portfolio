@@ -12,7 +12,6 @@ import { COLS_NARROW } from "./grid.ts";
 import { motdRows } from "./motd.ts";
 import { promptRows } from "./shell.ts";
 import { readerHtml, shellHtml, screenHtml, nappingHtml, notFoundHtml } from "./html.ts";
-import { windowBarRows } from "./windowbar.ts";
 import { resumeRows, privacyRows, contactRows, nappingCfg } from "./screens.ts";
 import { nappingRows } from "./napping.ts";
 
@@ -44,8 +43,6 @@ const FONT = new URL("../vendor/JetBrainsMono-Regular.ttf", import.meta.url);
  */
 function assertNarrowSafe(rows: Row[], cols: number): void {
   for (const [i, row] of rows.entries()) {
-    // The window bar is laid out in flow and wraps, so column positions do not apply to it.
-    if (row.cls?.split(" ").includes("bar")) continue;
     const runs = row.runs.filter((r) => !r.textOnly);
     for (const run of runs.slice(0, -1)) {
       const end = run.col + [...run.text].length;
@@ -74,7 +71,7 @@ export async function build(content?: Content): Promise<BuildResult> {
     resume: resumeRows(c), privacy: privacyRows(c),
     contact: contactRows(c), napping: nappingRows(nappingCfg(c)),
   } as const;
-  const all = [...shellRows(c), ...windowBarRows(c, null), ...screens.resume, ...screens.privacy, ...screens.contact, ...screens.napping];
+  const all = [...shellRows(c), ...screens.resume, ...screens.privacy, ...screens.contact, ...screens.napping];
   assertFits(all);
   assertNarrowSafe(all, COLS_NARROW);
   assertRowsCarryNoForbiddenNames(all, "the Shell screen");

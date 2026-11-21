@@ -123,9 +123,7 @@ export const colsIn = (containerPx: number): number =>
 export function gridCss(): string {
   return [
     `.screen { container: screen / inline-size; padding: ${GUTTER_PX}px; min-height: 100dvh }`,
-    // The bar is a sibling of the terminal, not a child, so it has to be named here too or it
-    // inherits the browser's default size and silently stops being on the grid.
-    `.term, .bar {`,
+    `.term {`,
     `  --fs: min(${FONT_PX}px, calc((100cqw - ${2 * GUTTER_PX}px) / ${COLS_NARROW} / ${ADVANCE}));`,
     `  --cell-w: calc(var(--fs) * ${ADVANCE});`,
     `  --cell-h: calc(var(--fs) * ${LINE});`,

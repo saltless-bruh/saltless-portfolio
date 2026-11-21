@@ -33,6 +33,7 @@
   ],
   "lastLogin": "Last login: Mon Oct  6 04:12:33 2026 from 127.0.0.1",
   "hint": "type -h for commands",
+  "back": "q / Esc on any page \u00b7 back to the shell",
   "screens": [
     {
       "cmd": "resume",
@@ -41,10 +42,6 @@
     {
       "cmd": "napping",
       "blurb": "agent CLI. what I build when it is not offence."
-    },
-    {
-      "cmd": "top",
-      "blurb": "live telemetry from the box."
     },
     {
       "cmd": "privacy",

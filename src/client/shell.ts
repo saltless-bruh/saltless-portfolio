@@ -14,22 +14,6 @@ const $ = <T extends Element>(sel: string): T => {
 
 const cfg: Cfg & { active: string | null; bootEnd?: number; napping?: import("./agent.ts").AgentCfg } = JSON.parse($("#cfg").textContent ?? "{}");
 
-/**
- * The window bar is on every screen, so it is wired before anything else and never depends on the
- * REPL existing. Alt+N rather than a bare number, because a bare number is a printable character
- * and the prompt owns those: typing `1` at a shell must type a 1, not navigate.
- */
-const routes = ["/", ...cfg.screens.map((s) => `/${s.cmd}`)];
-document.addEventListener("keydown", (e) => {
-  if (e.altKey && !e.ctrlKey && !e.metaKey && /^[0-9]$/.test(e.key)) {
-    const to = routes[Number(e.key)];
-    if (to) { e.preventDefault(); window.location.assign(to); }
-  }
-});
-document.querySelectorAll<HTMLElement>(".bar .win").forEach((el, i) => {
-  el.addEventListener("click", () => { const to = routes[i]; if (to) window.location.assign(to); });
-});
-
 // The cat's rack goes haywire now and then. Not under reduced motion: the CSS holds a still frame.
 const mascot = document.querySelector<SVGSVGElement>("svg.mascot");
 if (mascot && !matchMedia("(prefers-reduced-motion: reduce)").matches) wireAlarm(mascot);

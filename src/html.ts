@@ -3,7 +3,6 @@ import { css } from "./css.ts";
 import { renderRowsHtml } from "./rows.ts";
 import { motdRows } from "./motd.ts";
 import { promptRows, INPUT_COL } from "./shell.ts";
-import { windowBarRows } from "./windowbar.ts";
 import { resumeRows, privacyRows, contactRows, nappingCfg } from "./screens.ts";
 import type { Node } from "./client/fs.ts";
 import { run, type Cfg } from "./client/commands.ts";
@@ -46,7 +45,7 @@ ${bodyHtml}
 const config = (c: Content, active: string | null, fs?: Node, bootEnd = 0): string =>
   JSON.stringify({
     screens: c.screens, notFound: c.notFound, sudo: c.sudo,
-    hint: c.hint, inputCol: INPUT_COL, active,
+    hint: c.hint, back: c.back, inputCol: INPUT_COL, active,
     ...(active === null ? { bootEnd, fs, emptyNote: c.emptyDir, home: `~/${c.login}`, filesHelp: c.filesHelp } : {}),
     napping: active === "napping" ? { ...nappingCfg(c), inputCol: AGENT_INPUT_COL } : undefined,
   });
@@ -75,8 +74,7 @@ ${renderRowsHtml(exchangeRows(cfg, cfg.boot, "boot"))}
   </main>
   <label class="io" for="io">command</label>
   <input class="io" id="io" autocomplete="off" autocapitalize="off" autocorrect="off"
-         spellcheck="false" enterkeyhint="go">
-${renderRowsHtml(windowBarRows(c, "napping"))}`;
+         spellcheck="false" enterkeyhint="go">`;
   return doc(c, font, `napping \u00b7 ${c.handle}`, body, config(c, "napping"));
 }
 
@@ -90,8 +88,7 @@ export function screenHtml(c: Content, font: string, cmd: StaticScreen): string 
   const rows: Row[] = COMPOSE[cmd](c);
   const body = `  <main class="term" id="term">
 ${renderRowsHtml(rows)}
-  </main>
-${renderRowsHtml(windowBarRows(c, cmd))}`;
+  </main>`;
   return doc(c, font, `${cmd} \u00b7 ${c.handle}`, body, config(c, cmd));
 }
 
@@ -107,15 +104,14 @@ ${bodyHtml}
     </article>
     <div class="row"></div>
     <div class="row"><span class="muted" style="--c:0">q / Esc · back to the shell</span></div>
-  </main>
-${renderRowsHtml(windowBarRows(c, "reader"))}`;
+  </main>`;
   return doc(c, font, `${title} \u00b7 ${c.handle}`, body, config(c, "reader"));
 }
 
 /**
  * What Cloudflare serves for an address nothing lives at (`not_found_handling: "404-page"`). One
  * page answers every depth, so it names no path and loads its script absolutely; a focused screen,
- * so `q` or Esc is the way home, and no window in the bar is lit, because none of them is this.
+ * so `q` or Esc is the way home.
  */
 export function notFoundHtml(c: Content, font: string): string {
   const body = `  <main class="term" id="term">
@@ -124,8 +120,7 @@ ${renderRowsHtml([
     { runs: [] },
     { runs: [{ col: 0, text: "q / Esc · back to the shell", style: "muted" }] },
   ])}
-  </main>
-${renderRowsHtml(windowBarRows(c, "404"))}`;
+  </main>`;
   return doc(c, font, `404 · ${c.handle}`, body, config(c, "404"));
 }
 
@@ -137,7 +132,7 @@ ${renderRowsHtml(windowBarRows(c, "404"))}`;
 export function shellHtml(c: Content, fontWoff2Base64: string, fs: Node): string {
   const typed = "help";
   const cfg: Cfg = {
-    screens: c.screens, notFound: c.notFound, sudo: c.sudo, hint: c.hint, inputCol: INPUT_COL,
+    screens: c.screens, notFound: c.notFound, sudo: c.sudo, hint: c.hint, back: c.back, inputCol: INPUT_COL,
     fs, emptyNote: c.emptyDir, home: `~/${c.login}`, filesHelp: c.filesHelp,
   };
   const answer = run(typed, cfg);
@@ -177,8 +172,7 @@ ${prompt}
   </main>
   <label class="io" for="io">command</label>
   <input class="io" id="io" autocomplete="off" autocapitalize="off" autocorrect="off"
-         spellcheck="false" enterkeyhint="go" aria-describedby="hint">
-${renderRowsHtml(windowBarRows(c, null))}`;
+         spellcheck="false" enterkeyhint="go" aria-describedby="hint">`;
   return doc(c, fontWoff2Base64, c.handle, body, config(c, null, fs, s.prompt), `${BOOT_GATE}\n<style>${bootCss(s)}</style>\n`);
 }
 

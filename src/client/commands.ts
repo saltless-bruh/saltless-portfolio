@@ -7,6 +7,8 @@ export type Cfg = {
   notFound: string;
   sudo: string[];
   hint: string;
+  /** The way out of every focused screen; `help` ends with it, since no page shows a menu. */
+  back: string;
   inputCol: number;
   /** The offense work as files, built from the repo's `ops/` folder. */
   fs: Node;
@@ -82,12 +84,15 @@ export function run(input: string, cfg: Cfg, cwd: string[] = []): Outcome {
     return {
       kind: "rows",
       status: 0,
-      rows: entries.map((s) => ({
-        runs: [
-          { col: 0, text: s.cmd, style: "accent" as const },
-          { col: pad, text: s.blurb, style: "muted" as const },
-        ],
-      })),
+      rows: [
+        ...entries.map((s) => ({
+          runs: [
+            { col: 0, text: s.cmd, style: "accent" as const },
+            { col: pad, text: s.blurb, style: "muted" as const },
+          ],
+        })),
+        line(cfg.back, "muted"),
+      ],
     };
   }
   if (word === "ls") {

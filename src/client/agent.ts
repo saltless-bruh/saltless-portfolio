@@ -125,7 +125,7 @@ export function bootAgent(cfg: Cfg, io: HTMLInputElement): void {
       const lv = /eff-lv-(\d+)/.exec(hit.className);
       if (lv) { panel.s = { ...panel.s, at: Number(lv[1]) }; draw(); confirm(); } else toggle();
     }
-    if ((e.target as Element)?.closest("a, .win")) return;
+    if ((e.target as Element)?.closest("a")) return;
     if (!window.getSelection()?.toString()) focus();
   });
 

@@ -12,7 +12,7 @@ const fs: Node = { dir: true, kids: { ops: { dir: true, kids: {
   "My Writeup.md": f("/ops/my-writeup"),
 } } } };
 const cfg: Cfg = {
-  screens: [{ cmd: "resume", blurb: "" }], notFound: "too lazy", sudo: ["no", "shame"], hint: "", inputCol: 4,
+  screens: [{ cmd: "resume", blurb: "" }], notFound: "too lazy", sudo: ["no", "shame"], hint: "", back: "q / Esc · back", inputCol: 4,
   fs, emptyNote: "(empty. writeups are being collected.)", home: "~/saltless-bruh",
   filesHelp: { cmd: "ls · cd · cat", blurb: "the offense work, as files. start with: cd ops" },
 };
@@ -33,7 +33,7 @@ test("sudo is refused with 1, and an ordinary command succeeds", () => {
   assert.ok(l.kind === "rows" && l.status === 0);
 });
 
-const KNOWN = ["resume", "napping", "top", "privacy", "contact", "help", "ls", "cd", "cat", "pwd", "clear", "exit", "sudo"];
+const KNOWN = ["resume", "napping", "privacy", "contact", "help", "ls", "cd", "cat", "pwd", "clear", "exit", "sudo"];
 
 test("a swapped pair of letters is one edit, as zsh's spell checker treats it", () => {
   assert.equal(distance("hepl", "help"), 1);
@@ -42,7 +42,7 @@ test("a swapped pair of letters is one edit, as zsh's spell checker treats it", 
 });
 
 test("corrections catch real typos and leave unrelated words alone", () => {
-  for (const [typo, meant] of [["hepl", "help"], ["hlep", "help"], ["sl", "ls"], ["claer", "clear"], ["exti", "exit"], ["napipng", "napping"], ["contcat", "contact"], ["lss", "ls"], ["topp", "top"], ["privcay", "privacy"]]) {
+  for (const [typo, meant] of [["hepl", "help"], ["hlep", "help"], ["sl", "ls"], ["claer", "clear"], ["exti", "exit"], ["napipng", "napping"], ["contcat", "contact"], ["lss", "ls"], ["privcay", "privacy"]]) {
     assert.equal(nearest(typo, KNOWN), meant, typo);
   }
   for (const word of ["nope", "who", "xyz", "cat", "rm"]) assert.equal(nearest(word, KNOWN), undefined, `${word} was "corrected"`);
@@ -98,4 +98,12 @@ test("minor 9: ls never runs past 40 columns", () => {
   const out = run("ls", wide);
   assert.ok(out.kind === "rows");
   if (out.kind === "rows") for (const r of out.rows) for (const x of r.runs) assert.ok(x.col + x.text.length <= 40, `${x.text} ends at ${x.col + x.text.length}`);
+});
+
+test("help ends with the way back, since no page shows a menu", () => {
+  const out = run("help", cfg);
+  assert.equal(out.kind, "rows");
+  if (out.kind !== "rows") return;
+  const last = out.rows.at(-1)!;
+  assert.deepEqual(last.runs.map((r) => [r.text, r.style]), [["q / Esc · back", "muted"]]);
 });

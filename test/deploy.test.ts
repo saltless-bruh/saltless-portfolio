@@ -13,8 +13,7 @@ test("a missing address answers in zsh's words, and q goes back to the shell", (
   assert.match(html, /q \/ Esc · back to the shell/);
   assert.match(html, /<script type="module" src="\/app.js">/, "absolute, so it loads from any depth");
   const cfg = JSON.parse(html.slice(html.indexOf('id="cfg">') + 9, html.indexOf("</script>", html.indexOf('id="cfg">'))).replace(/\\u003c/g, "<"));
-  assert.equal(cfg.active, "404", "a focused screen, with no window lit in the bar");
-  assert.ok(!/class="[^"]*\bwin on\b/.test(html), "no window claims to be this page");
+  assert.equal(cfg.active, "404", "a focused screen: q or Esc goes home");
 });
 
 test("Cloudflare serves dist/ as assets only, with the 404 page for anything missing", () => {
@@ -35,4 +34,19 @@ test("the deploy runs only after tests, typecheck and a clean build pass, on Nod
   assert.match(wf, /CLOUDFLARE_API_TOKEN: \$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/);
   assert.match(wf, /if: github\.event_name == 'push'/, "pull requests are checked, never deployed");
   assert.match(wf, /permissions:\s*\n\s*contents: read/);
+});
+
+test("help never lists a route with no page behind it", async () => {
+  const { loadContent } = await import("../src/content.ts");
+  const { existsSync } = await import("node:fs");
+  const { build } = await import("../src/build.ts");
+  await build();
+  for (const s of loadContent().screens) assert.ok(existsSync(new URL(`../dist/${s.cmd}/index.html`, import.meta.url)), `${s.cmd} is in help but 404s`);
+});
+
+test("no page carries the tmux window bar any more", async () => {
+  const { readFileSync, readdirSync } = await import("node:fs");
+  const pages = readdirSync(new URL("../dist/", import.meta.url), { recursive: true }).map(String).filter((f) => f.endsWith(".html"));
+  assert.ok(pages.length > 5);
+  for (const f of pages) assert.doesNotMatch(readFileSync(new URL(`../dist/${f}`, import.meta.url), "utf8"), /class="row bar|0:shell/, f);
 });

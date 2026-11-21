@@ -138,28 +138,6 @@ ${gridCss()}
 .term:focus-visible, .io:focus { outline: none }
 .term[data-focus="off"] .caret { animation: none; opacity: .35 }
 
-/* tmux puts its status line at the bottom of the window, so this does too. */
-.bar {
-  position: fixed; left: 0; right: 0; bottom: 0;
-  background: var(--surface);
-  padding-left: var(--gutter);
-  border-top: 1px solid var(--border);
-}
-/* The bar is a LIST, not column-aligned art, so it flows and wraps. At 40 columns six window
-   names cannot sit on one line, and a bar that clips its own last three entries fails the one job
-   it has: showing the whole route list without anyone having to type. */
-.bar { white-space: normal; padding-right: var(--gutter) }
-/* inline-block so a line break can fall between two windows; pre inside each keeps a
-   window's own label from splitting. */
-.bar > span, .bar > span:last-child {
-  position: static; display: inline-block; margin: 0; white-space: pre;
-}
-/* The gap between two windows is the only place the bar may break. A pre-formatted span offers no
-   break opportunity at all, which is why the bar clipped its last entries instead of wrapping. */
-.bar > span.sep { display: inline; white-space: normal }
-.bar .win { cursor: pointer }
-.bar .win.on { background: var(--accent); color: var(--bg) }
-.bar .win:hover { color: var(--text) }
 .term { padding-bottom: calc(var(--cell-h) * 3) }
 
 /* The agent's startup: the Mascot with the startup block beside her, the way an agent CLI prints

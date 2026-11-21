@@ -39,6 +39,8 @@ export type Content = {
   boot: BootLine[];
   lastLogin: string;
   hint: string;
+  /** The way out of every focused screen, said once: as the last line of `help`. */
+  back: string;
   screens: ScreenEntry[];
   notFound: string;
   sudo: string[];
@@ -241,6 +243,7 @@ export function validateContent(raw: unknown): Content {
     boot,
     lastLogin: str(c.lastLogin, "lastLogin"),
     hint: str(c.hint, "hint"),
+    back: str(c.back, "back"),
     screens,
     notFound: str(c.notFound, "notFound"),
     sudo,
