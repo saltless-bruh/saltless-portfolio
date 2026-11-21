@@ -139,6 +139,12 @@ ${gridCss()}
 .term[data-focus="off"] .caret { animation: none; opacity: .35 }
 
 .term { padding-bottom: calc(var(--cell-h) * 3) }
+/* man's status line, pinned to the bottom in reverse video, the way less draws it. */
+.pager {
+  position: fixed; left: var(--gutter); bottom: calc(var(--cell-h) * .5);
+  background: var(--text); color: var(--bg); text-decoration: none; white-space: pre;
+}
+.pager:hover, .pager:focus-visible { background: var(--accent); outline: none }
 
 /* napping's input band: pinned to the window's bottom between two rules, with a hint line under it,
    the shape every agent CLI has. The conversation scrolls above it; the client keeps the term's

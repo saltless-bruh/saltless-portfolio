@@ -33,17 +33,12 @@ export function motdRows(c: Content): Row[] {
     ["user", c.prompt.user],
     ["host", c.prompt.host],
     ["uptime", c.panel.uptime],
-    ["gpu", "--"],
-    ["model", "--"],
   ];
   const valueCol = panelValueCol(panel.map(([k]) => k));
   for (const [key, value] of panel) {
-    const live = key === "gpu" || key === "model";
     const runs: Run[] = [
       { col: 0, text: `${key}:`, style: "accent" },
-      // Telemetry has not arrived yet and says so. It is never a fabricated number, and the
-      // placeholder is the same width as nothing, so filling it in cannot move the grid.
-      { col: valueCol, text: value, style: live ? "muted" : "text", cls: live ? `live live-${key}` : undefined },
+      { col: valueCol, text: value, style: "text" },
     ];
     rows.push({ runs });
   }

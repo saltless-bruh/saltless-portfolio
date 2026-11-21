@@ -88,8 +88,12 @@ const COMPOSE: Record<StaticScreen, (c: Content) => Row[]> = {
 
 export function screenHtml(c: Content, font: string, cmd: StaticScreen): string {
   const rows: Row[] = COMPOSE[cmd](c);
+  // These pages are the ones a CV links to, so a visitor may never have seen the shell's `help`.
+  // The way back is man's own status line: what `man resume` would print, and a link home when
+  // tapped, because a phone has no q key.
   const body = `  <main class="term" id="term">
 ${renderRowsHtml(rows)}
+    <a class="pager" href="/">${esc(`Manual page ${cmd}(1) (press q to quit)`)}</a>
   </main>`;
   return doc(c, font, `${cmd} \u00b7 ${c.handle}`, body, config(c, cmd));
 }

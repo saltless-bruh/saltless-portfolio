@@ -50,3 +50,24 @@ test("no page carries the tmux window bar any more", async () => {
   assert.ok(pages.length > 5);
   for (const f of pages) assert.doesNotMatch(readFileSync(new URL(`../dist/${f}`, import.meta.url), "utf8"), /class="row bar|0:shell/, f);
 });
+
+test("the MOTD shows no placeholder that will never fill (gpu/model went with telemetry)", async () => {
+  const { motdRows } = await import("../src/motd.ts");
+  const { loadContent } = await import("../src/content.ts");
+  const text = motdRows(loadContent()).flatMap((r) => r.runs.map((x) => x.text)).join("\n");
+  assert.doesNotMatch(text, /^(gpu|model):/m);
+  assert.doesNotMatch(text, /^--$/m);
+});
+
+test("a page someone can be linked to straight from a CV shows the way back as man's status line", async () => {
+  const { screenHtml } = await import("../src/html.ts");
+  const { loadContent } = await import("../src/content.ts");
+  const { COLS_NARROW } = await import("../src/grid.ts");
+  for (const cmd of ["resume", "privacy", "contact"] as const) {
+    const html = screenHtml(loadContent(), "", cmd);
+    const m = /<a class="pager" href="\/">([^<]*)<\/a>/.exec(html);
+    assert.ok(m, `${cmd} has no way back`);
+    assert.equal(m[1], `Manual page ${cmd}(1) (press q to quit)`);
+    assert.ok(m[1].length <= COLS_NARROW, `${cmd}'s status line overflows a phone`);
+  }
+});
