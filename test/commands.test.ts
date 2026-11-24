@@ -107,3 +107,9 @@ test("help ends with the way back, since no page shows a menu", () => {
   const last = out.rows.at(-1)!;
   assert.deepEqual(last.runs.map((r) => [r.text, r.style]), [["q / Esc · back", "muted"]]);
 });
+
+test("exit goes back out to the room on /, where there is one; elsewhere it does nothing, as before", () => {
+  assert.deepEqual(run("exit", { ...cfg, room: true }), { kind: "room" });
+  assert.deepEqual(run("exit", cfg), { kind: "nothing" });
+  assert.deepEqual(run("q", { ...cfg, room: true }), { kind: "nothing" }, "q stays what it was");
+});

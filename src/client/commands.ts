@@ -17,6 +17,8 @@ export type Cfg = {
   filesHelp: { cmd: string; blurb: string };
   /** The prompt's own path for the file system's top, `~/<login>`. */
   home: string;
+  /** True on `/` when the room is there to go back to (a wide screen): `exit` then zooms out. */
+  room?: boolean;
 };
 
 export type Outcome =
@@ -24,7 +26,9 @@ export type Outcome =
   | { kind: "go"; to: string }
   | { kind: "clear" }
   | { kind: "correct"; from: string; to: string }
-  | { kind: "nothing" };
+  | { kind: "nothing" }
+  /** Back out to the room (`exit` on `/`, where there is one). */
+  | { kind: "room" };
 
 const line = (text: string, style?: Row["runs"][number]["style"]): Row => ({
   runs: [{ col: 0, text, style }],
@@ -77,6 +81,7 @@ export function run(input: string, cfg: Cfg, cwd: string[] = []): Outcome {
     return { kind: "rows", status: 1, rows: [line(cfg.sudo[0]!, "error"), line(cfg.sudo[1]!, "muted")] };
   }
   if (word === "clear") return { kind: "clear" };
+  if (word === "exit" && cfg.room) return { kind: "room" };
   if (word === "exit" || word === "q") return { kind: "nothing" };
   if (word === "help" || word === "-h" || word === "--help" || word === "?") {
     const entries = [...cfg.screens, cfg.filesHelp];

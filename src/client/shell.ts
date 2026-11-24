@@ -6,6 +6,7 @@ import { resolve, completePath, validCwd, fitPath } from "./fs.ts";
 import { scramble } from "./scramble.ts";
 import { wireAlarm } from "./alarm.ts";
 import { bootRoom } from "./room.ts";
+import { NARROW } from "../room.ts";
 
 const $ = <T extends Element>(sel: string): T => {
   const el = document.querySelector<T>(sel);
@@ -14,6 +15,13 @@ const $ = <T extends Element>(sel: string): T => {
 };
 
 const cfg: Cfg & { active: string | null; bootEnd?: number; napping?: import("./agent.ts").AgentCfg } = JSON.parse($("#cfg").textContent ?? "{}");
+
+/**
+ * The room's controls, once it is up: `exit` uses them to go back out. Declared before anything runs:
+ * `bootShell` is called further down the module and assigns this, and a declaration placed after that
+ * call (the bundler turns top-level `let` into `var`) would reset it to null once the call returned.
+ */
+let roomCtl: { zoomOut: () => void } | null = null;
 
 // The cat's rack goes haywire now and then. Not under reduced motion: the CSS holds a still frame.
 const mascot = document.querySelector<SVGSVGElement>("svg.mascot");
@@ -35,10 +43,9 @@ if (cfg.active === "napping" && io && cfg.napping) {
   bootShell(io);
 }
 
-/** The room's controls, once it is up: `exit` uses them to go back out. */
-let roomCtl: { zoomOut: () => void } | null = null;
-
 function bootShell(io: HTMLInputElement): void {
+// `exit` can only go back to a room that is there to go back to.
+cfg.room = !!document.getElementById("room") && !matchMedia(NARROW).matches;
 const term = $<HTMLElement>("#term");
 const log = $<HTMLElement>("#log");
 const cmdline = $<HTMLElement>("#prompt .cmdline");
@@ -130,6 +137,7 @@ function apply(out: Outcome): void {
   if (out.kind === "clear") { status = 0; log.innerHTML = ""; io.value = ""; paint(); return; }
   if (out.kind === "go") { commit([]); window.location.assign(out.to); return; }
   if (out.kind === "nothing") { commit([]); io.value = ""; paint(); return; }
+  if (out.kind === "room") { commit([]); io.value = ""; paint(); io.blur(); roomCtl?.zoomOut(); return; }
   if (out.kind === "correct") {
     commit([{ runs: [{ col: 0, text: `correct '${out.from}' to '${out.to}' [nyae]? `, style: "warning" }] }]);
     correcting = { from: out.from, to: out.to };

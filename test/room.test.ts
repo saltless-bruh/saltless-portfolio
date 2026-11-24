@@ -167,3 +167,10 @@ test("review focus 1: a session that entered through the room stays dark on ever
   run({ "lazie:dark": "1" });
   assert.equal(set.theme, "dark");
 });
+
+test("the room's controls are declared before bootShell runs, so the bundler's var cannot reset them to null", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync(new URL("../src/client/shell.ts", import.meta.url), "utf8");
+  const decl = src.indexOf("let roomCtl"), call = src.indexOf("bootShell(io);");
+  assert.ok(decl > 0 && call > 0 && decl < call, "found exit doing nothing: roomCtl was declared after the call that set it");
+});
