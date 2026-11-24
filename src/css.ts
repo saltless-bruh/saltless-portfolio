@@ -149,15 +149,16 @@ pre, code, kbd, samp { font-family: inherit; font-size: 1em }
 .room-frame { position: relative; width: 100%; max-width: calc(50vh * 16 / 9); aspect-ratio: 16 / 9; margin: 0 auto }
 .room-scene, #room-fx { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated }
 .room-mon { position: absolute; padding: 0; border: 0; background: transparent; cursor: pointer }
-.room-mon:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
-.room-hint { margin: 0; padding: calc(var(--cell-h) * .5) var(--gutter); text-align: center; color: var(--muted) }
+.room-mon:focus-visible { outline: 2px solid #83c092; outline-offset: 2px }
+/* The hint names a click and a key, which only the overlay has: hidden on the banner and without JS. */
+.room-hint { display: none; margin: 0; text-align: center }
 /* Wide screens: the room covers the window until the monitor is clicked; once entered this session
    it is gone, so / is the shell again. */
 @media (min-width: 720px) and (min-aspect-ratio: 1/1) {
   html.room { overflow: hidden }
   html.room .room-layer { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; margin: 0; overflow: hidden }
   html.room .room-frame { width: min(100vw, 100dvh * 16 / 9); max-width: none; transform-origin: 0 0 }
-  html.room .room-hint { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); padding: 6px 14px; color: var(--text); background: #14191ce6; box-shadow: 3px 3px 0 #0e1214 }
+  html.room .room-hint { display: block; position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); padding: 6px 14px; color: #d3c6aa; background: #14191ce6; box-shadow: 3px 3px 0 #0e1214 }
   html.room.zooming .room-frame { transition: transform 900ms cubic-bezier(.7, 0, .2, 1) }
   html.entered .room-layer { display: none }
 }

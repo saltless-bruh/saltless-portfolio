@@ -1,4 +1,4 @@
-import { MONITORS, CAT, LEDS, SCENE, NARROW, zoomTransform, catFrame, planEnter, type Rect } from "../room.ts";
+import { MONITORS, CAT, LEDS, SCENE, NARROW, zoomTransform, catFrame, planEnter, roomKey, type Rect } from "../room.ts";
 
 /**
  * The room on `/` (docs/superpowers/specs/2026-11-21-room-home-design.md). The scene is a still
@@ -92,12 +92,20 @@ export function bootRoom(opts: { onEnter: () => void }): { zoomOut: () => void }
   // While the room covers the window, the keyboard is the room's: Enter goes in, Tab reaches the
   // monitors, and nothing types into the shell hidden underneath.
   document.addEventListener("keydown", (e) => {
-    if (!up() || e.key === "Tab") return;
-    if (e.target instanceof HTMLButtonElement && e.target.closest("#room") && (e.key === "Enter" || e.key === " ")) return;
+    if (!up() || roomKey(e) !== "enter") return;
+    if (e.target instanceof HTMLButtonElement && e.target.closest("#room")) return;   // the button's own click
     e.preventDefault();
     e.stopImmediatePropagation();
-    if (e.key === "Enter") enter("main");
+    enter("main");
   }, true);
+  // Back from napping: the browser restores this page as it was left, zoomed into a monitor with
+  // `busy` set. Put the room back as it was before the click.
+  addEventListener("pageshow", (e) => {
+    if (!e.persisted) return;
+    busy = false;
+    root.classList.remove("zooming");
+    frame.style.transform = "";
+  });
   // Turned narrow while the room was up (a resize, a rotation): drop to the banner, shell live.
   narrow.addEventListener("change", () => {
     if (!narrow.matches || !up()) return;
@@ -105,6 +113,8 @@ export function bootRoom(opts: { onEnter: () => void }): { zoomOut: () => void }
     frame.style.transform = "";
     opts.onEnter();
   });
+
+  root.classList.add("room-live");   // the gate's deadline: the room is alive, it may stay
 
   // ---- `exit`: back out to the room
   const zoomOut = () => {

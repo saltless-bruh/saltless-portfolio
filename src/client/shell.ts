@@ -273,5 +273,7 @@ roomCtl = document.getElementById("room") ? bootRoom({
     focus();
   },
 }) : null;
+// No room after all (its canvas or frame missing): never leave the shell hidden behind it.
+if (!roomCtl) root.classList.remove("room");
 if (!root.classList.contains("room")) runBoot();
 }

@@ -23,8 +23,10 @@ export const THEME_GATE = `<script>try{if(sessionStorage.getItem("lazie:dark"))d
  * Runs before first paint, before BOOT_GATE. On a wide screen it puts the room up for a tab that has
  * not entered yet (`room`), or marks a tab that has (`entered`), so the layer is hidden and `/` is
  * the shell again. Narrow screens and no-JavaScript visitors get the banner and the shell together.
+ * If the page's script never brings the room to life (`room-live`) within 4 s (blocked, failed,
+ * broken), the room comes down by itself: nobody is ever locked out of the shell behind it.
  */
-export const ROOM_GATE = `<script>try{var d=document.documentElement;if(!matchMedia("${NARROW}").matches)d.classList.add(sessionStorage.getItem("lazie:entered")?"entered":"room")}catch(e){}</script>`;
+export const ROOM_GATE = `<script>try{var d=document.documentElement;if(!matchMedia("${NARROW}").matches){d.classList.add(sessionStorage.getItem("lazie:entered")?"entered":"room");setTimeout(function(){if(!d.classList.contains("room-live"))d.classList.remove("room")},4000)}}catch(e){}</script>`;
 
 const pct = (v: number, of: number): string => `calc(${v}/${of}*100%)`;
 

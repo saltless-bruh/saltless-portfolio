@@ -54,3 +54,12 @@ export const NARROW = "(max-width: 719.98px), (max-aspect-ratio: 999/1000)";
 export function planEnter(which: "main" | "side", reduced: boolean): { animate: boolean; then: "shell" | "/napping/" } {
   return { animate: !reduced, then: which === "main" ? "shell" : "/napping/" };
 }
+
+/**
+ * What a key does while the room covers the window: Enter goes in; everything else is left alone,
+ * so reload, find, page zoom, back and Tab keep working (focus is not in the shell's input then, so
+ * nothing types into it).
+ */
+export function roomKey(e: { key: string; ctrlKey: boolean; metaKey: boolean; altKey: boolean }): "enter" | "pass" {
+  return e.key === "Enter" && !e.ctrlKey && !e.metaKey && !e.altKey ? "enter" : "pass";
+}

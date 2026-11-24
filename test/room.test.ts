@@ -73,7 +73,7 @@ async function gate(opts: { entered?: boolean; narrow?: boolean; reduced?: boole
   const matchMedia = (q: string) => ({ matches: q.includes("reduced-motion") ? !!opts.reduced : !!opts.narrow });
   for (const tag of [ROOM_GATE, BOOT_GATE]) {
     const js = tag.replace(/^<script>/, "").replace(/<\/script>$/, "");
-    new Function("document", "sessionStorage", "matchMedia", js)(doc, sessionStorage, matchMedia);
+    new Function("document", "sessionStorage", "matchMedia", "setTimeout", js)(doc, sessionStorage, matchMedia, () => 0);
   }
   return [...classes].sort();
 }
@@ -173,4 +173,42 @@ test("the room's controls are declared before bootShell runs, so the bundler's v
   const src = readFileSync(new URL("../src/client/shell.ts", import.meta.url), "utf8");
   const decl = src.indexOf("let roomCtl"), call = src.indexOf("bootShell(io);");
   assert.ok(decl > 0 && call > 0 && decl < call, "found exit doing nothing: roomCtl was declared after the call that set it");
+});
+
+test("review fix: while the room is up only Enter is the room's; shortcuts and other keys pass", async () => {
+  const { roomKey } = await import("../src/room.ts");
+  const k = (key: string, mods: Partial<{ ctrlKey: boolean; metaKey: boolean; altKey: boolean }> = {}) => roomKey({ key, ctrlKey: false, metaKey: false, altKey: false, ...mods });
+  assert.equal(k("Enter"), "enter");
+  for (const [key, mods] of [["r", { ctrlKey: true }], ["f", { ctrlKey: true }], ["+", { ctrlKey: true }], ["0", { metaKey: true }], ["ArrowLeft", { altKey: true }], ["F5", {}], ["Tab", {}], ["a", {}]] as const) {
+    assert.equal(k(key, mods), "pass", `${key} must reach the browser`);
+  }
+  assert.equal(k("Enter", { ctrlKey: true }), "pass", "a modified Enter is the browser's");
+});
+
+test("review fix: if the page's script never brings the room to life, the gate takes the room down", async () => {
+  const { ROOM_GATE } = await import("../src/html.ts");
+  const classes = new Set<string>(); let timer: (() => void) | undefined; let ms = 0;
+  const doc = { documentElement: { classList: { add: (c: string) => classes.add(c), remove: (c: string) => classes.delete(c), contains: (c: string) => classes.has(c) } } };
+  new Function("document", "sessionStorage", "matchMedia", "setTimeout", ROOM_GATE.replace(/^<script>/, "").replace(/<\/script>$/, ""))(
+    doc, { getItem: () => null }, () => ({ matches: false }), (f: () => void, t: number) => { timer = f; ms = t; });
+  assert.ok(classes.has("room") && timer && ms > 0 && ms <= 4000, "the room is up, with a deadline");
+  timer!();
+  assert.ok(!classes.has("room"), "no room-live by the deadline: the room comes down and the shell shows");
+  classes.add("room"); classes.add("room-live"); timer!();
+  assert.ok(classes.has("room"), "a room the client brought to life stays");
+});
+
+test("review fix: the hint only shows on the overlay, in fixed room colours that pass contrast", async () => {
+  const { css } = await import("../src/css.ts");
+  const s = css("");
+  assert.match(s, /\.room-hint \{[^}]*display: none/, "hidden by default: the banner and no-JS pages cannot use it");
+  const wide = /@media \(min-width: 720px\) and \(min-aspect-ratio: 1\/1\) \{([\s\S]*?)\n\}/.exec(s)![1]!;
+  assert.match(wide, /html\.room \.room-hint \{[^}]*display: block[^}]*color: #d3c6aa/);
+  assert.match(s, /\.room-mon:focus-visible \{[^}]*outline: 2px solid #83c092/);
+});
+
+test("review fix: coming Back from napping resets a room left mid-zoom (back/forward cache)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync(new URL("../src/client/room.ts", import.meta.url), "utf8");
+  assert.match(src, /addEventListener\("pageshow"/, "the client listens for a restored page");
 });
