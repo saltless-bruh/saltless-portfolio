@@ -142,6 +142,25 @@ pre, code, kbd, samp { font-family: inherit; font-size: 1em }
 .term[data-focus="off"] .caret { animation: none; opacity: .35 }
 
 .term { padding-bottom: calc(var(--cell-h) * 3) }
+
+/* The room (/ only). By default a banner above the shell: phones, tall windows, no JavaScript. The
+   scene is pixel art at 320x180, scaled up without smoothing; the layer is dark until it loads. */
+.room-layer { background: #1e2326; margin: 0 0 var(--cell-h) }
+.room-frame { position: relative; width: 100%; max-width: calc(50vh * 16 / 9); aspect-ratio: 16 / 9; margin: 0 auto }
+.room-scene, #room-fx { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated }
+.room-mon { position: absolute; padding: 0; border: 0; background: transparent; cursor: pointer }
+.room-mon:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.room-hint { margin: 0; padding: calc(var(--cell-h) * .5) var(--gutter); text-align: center; color: var(--muted) }
+/* Wide screens: the room covers the window until the monitor is clicked; once entered this session
+   it is gone, so / is the shell again. */
+@media (min-width: 720px) and (min-aspect-ratio: 1/1) {
+  html.room { overflow: hidden }
+  html.room .room-layer { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; margin: 0; overflow: hidden }
+  html.room .room-frame { width: min(100vw, 100dvh * 16 / 9); max-width: none; transform-origin: 0 0 }
+  html.room .room-hint { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); padding: 6px 14px; color: var(--text); background: #14191ce6; box-shadow: 3px 3px 0 #0e1214 }
+  html.room.zooming .room-frame { transition: transform 900ms cubic-bezier(.7, 0, .2, 1) }
+  html.entered .room-layer { display: none }
+}
 /* man's status line, pinned to the bottom in reverse video, the way less draws it. */
 .pager {
   position: fixed; left: var(--gutter); bottom: calc(var(--cell-h) * .5);

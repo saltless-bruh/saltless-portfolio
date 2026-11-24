@@ -99,7 +99,7 @@ export async function build(content?: Content): Promise<BuildResult> {
   const rendered = ops.docs.map((d) => ({ d, html: renderDoc(d.src, { dir: d.dir, links, assets }) }));
   const covered = fontCoverage(ttf);
   const opsGlyphs = [...new Set(ops.docs.flatMap((d) => [...d.src]))].filter((ch) => covered.has(ch.codePointAt(0)!) && !FORBIDDEN_GLYPHS.includes(ch)).join("");
-  const glyphs = [...new Set(ASCII + charsUsed(all) + c.hint + c.notFound + c.sudo.join("") + Object.values(c.napping.deflect).join("") + c.napping.verbs.join("") + nappingClientText(c))].sort().join("");
+  const glyphs = [...new Set(ASCII + charsUsed(all) + c.hint + c.notFound + c.sudo.join("") + Object.values(c.napping.deflect).join("") + c.napping.verbs.join("") + nappingClientText(c) + c.room.hint)].sort().join("");
   for (const bad of FORBIDDEN_GLYPHS) {
     if (glyphs.includes(bad)) throw new Error(`the page uses ${bad}, which JetBrains Mono does not carry`);
   }

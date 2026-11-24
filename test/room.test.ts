@@ -61,3 +61,79 @@ test("the room's words say how to get in, without a dash", () => {
   assert.ok(r.alt.length > 30 && r.wake && r.napping);
   for (const v of Object.values(r)) assert.ok(!/[—–]/.test(v), v);
 });
+
+/** Runs an inline gate script against a stub page; returns the classes it put on <html>. */
+async function gate(opts: { entered?: boolean; narrow?: boolean; reduced?: boolean; booted?: boolean }): Promise<string[]> {
+  const { ROOM_GATE } = await import("../src/html.ts");
+  const { BOOT_GATE } = await import("../src/boot.ts");
+  const classes = new Set<string>();
+  const doc = { documentElement: { classList: { add: (c: string) => classes.add(c), contains: (c: string) => classes.has(c) } } };
+  const store: Record<string, string> = { ...(opts.entered ? { "lazie:entered": "1" } : {}), ...(opts.booted ? { "lazie:booted": "1" } : {}) };
+  const sessionStorage = { getItem: (k: string) => store[k] ?? null };
+  const matchMedia = (q: string) => ({ matches: q.includes("reduced-motion") ? !!opts.reduced : !!opts.narrow });
+  for (const tag of [ROOM_GATE, BOOT_GATE]) {
+    const js = tag.replace(/^<script>/, "").replace(/<\/script>$/, "");
+    new Function("document", "sessionStorage", "matchMedia", js)(doc, sessionStorage, matchMedia);
+  }
+  return [...classes].sort();
+}
+
+test("the gate puts the room up on a wide screen for a tab that has not entered, and holds the boot back", async () => {
+  assert.deepEqual(await gate({}), ["room"]);
+  assert.deepEqual(await gate({ reduced: true }), ["room"], "reduced motion still gets the room, as a still");
+  assert.deepEqual(await gate({ entered: true }), ["booting", "entered"], "entered this session: straight into the shell, which boots as before");
+  assert.deepEqual(await gate({ entered: true, booted: true }), ["entered"]);
+  assert.deepEqual(await gate({ narrow: true }), ["booting"], "narrow: no overlay; the banner sits above a shell that boots as before");
+});
+
+test("the room layer comes before the shell and takes none of its rows away", async () => {
+  const { shellHtml } = await import("../src/html.ts");
+  const c = loadContent();
+  const html = shellHtml(c, "", { dir: true, kids: {} });
+  const room = html.indexOf('id="room"'), main = html.indexOf("<main");
+  assert.ok(room > 0 && room < main, "the room layer opens the page, before <main>");
+  const rows = (h: string) => [...h.matchAll(/<div class="row[^"]*">[\s\S]*?<\/div>/g)].map((m) => m[0]);
+  const shell = html.slice(main);
+  assert.ok(rows(shell).length > 20, "the MOTD, the help exchange and the prompt are still in the document");
+  for (const needle of ["Started", "motivation.service", "resume", "napping", "the offense work"]) assert.ok(shell.includes(needle), needle);
+});
+
+test("the monitors are labelled buttons, placed where the scene draws them", async () => {
+  const { shellHtml } = await import("../src/html.ts");
+  const c = loadContent();
+  const html = shellHtml(c, "", { dir: true, kids: {} });
+  for (const [which, label] of [["main", c.room.wake], ["side", c.room.napping]] as const) {
+    const b = new RegExp(`<button class="room-mon" data-mon="${which}" aria-label="${label}" style="([^"]+)"`).exec(html);
+    assert.ok(b, `${which} button`);
+    const m = MONITORS[which];
+    for (const part of [`left:calc(${m.x}/320*100%)`, `top:calc(${m.y}/180*100%)`, `width:calc(${m.w}/320*100%)`, `height:calc(${m.h}/180*100%)`]) assert.ok(b![1]!.includes(part), `${which}: ${part}`);
+  }
+  assert.ok(html.includes(c.room.hint), "the hint is on the page");
+});
+
+test("review focus 5: the scene has fixed dimensions, loads first, and is described", async () => {
+  const { shellHtml } = await import("../src/html.ts");
+  const c = loadContent();
+  const img = /<img class="room-scene"[^>]*>/.exec(shellHtml(c, "", { dir: true, kids: {} }))![0];
+  for (const attr of ['src="/room/scene.png"', 'width="320"', 'height="180"', 'fetchpriority="high"', `alt="${c.room.alt}"`]) assert.ok(img.includes(attr), attr);
+});
+
+test("the overlay is only for wide screens; pixels stay crisp; the layer is dark while the scene loads", async () => {
+  const { css } = await import("../src/css.ts");
+  const s = css("");
+  const wide = /@media \(min-width: 720px\) and \(min-aspect-ratio: 1\/1\) \{([\s\S]*?)\n\}/.exec(s);
+  assert.ok(wide, "a wide-screen block");
+  assert.match(wide![1]!, /html\.room \.room-layer \{[^}]*position: fixed/);
+  assert.match(wide![1]!, /html\.entered \.room-layer \{[^}]*display: none/);
+  assert.doesNotMatch(s.replace(wide![0], ""), /html\.room \.room-layer \{[^}]*position: fixed/, "no overlay outside the wide block");
+  assert.match(s, /\.room-scene, #room-fx \{[^}]*image-rendering: pixelated/);
+  assert.match(s, /\.room-layer \{[^}]*background: #1e2326/);
+});
+
+test("only / has a room: direct links open straight into their page", async () => {
+  const { screenHtml, nappingHtml, notFoundHtml } = await import("../src/html.ts");
+  const c = loadContent();
+  for (const page of [screenHtml(c, "", "resume"), screenHtml(c, "", "privacy"), nappingHtml(c, ""), notFoundHtml(c, "")]) {
+    assert.ok(!page.includes('id="room"') && !page.includes("lazie:entered"), "no room off the home page");
+  }
+});

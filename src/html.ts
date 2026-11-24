@@ -11,6 +11,37 @@ import { startupRows, exchangeRows, nappingRows, AGENT_INPUT_COL, statusRight } 
 import { mascotSvg } from "./mascot.ts";
 import { PROMPT as AGENT_PROMPT } from "./napping.ts";
 import type { Row } from "./rows.ts";
+import { MONITORS, SCENE } from "./room.ts";
+
+/** Narrow: a phone, or any window taller than it is wide. The room is a banner there, never an overlay. */
+const NARROW = "(max-width: 719.98px), (max-aspect-ratio: 999/1000)";
+
+/**
+ * Runs before first paint, before BOOT_GATE. On a wide screen it puts the room up for a tab that has
+ * not entered yet (`room`), or marks a tab that has (`entered`), so the layer is hidden and `/` is
+ * the shell again. Narrow screens and no-JavaScript visitors get the banner and the shell together.
+ */
+export const ROOM_GATE = `<script>try{var d=document.documentElement;if(!matchMedia("${NARROW}").matches)d.classList.add(sessionStorage.getItem("lazie:entered")?"entered":"room")}catch(e){}</script>`;
+
+const pct = (v: number, of: number): string => `calc(${v}/${of}*100%)`;
+
+/** The room: the scene, its ambient canvas, the two monitors as buttons, and the hint. */
+function roomHtml(c: Content): string {
+  const mon = (which: "main" | "side", label: string) => {
+    const m = MONITORS[which];
+    return `<button class="room-mon" data-mon="${which}" aria-label="${esc(label)}" style="left:${pct(m.x, SCENE.w)};top:${pct(m.y, SCENE.h)};width:${pct(m.w, SCENE.w)};height:${pct(m.h, SCENE.h)}"></button>`;
+  };
+  return `  <div id="room" class="room-layer">
+    <div class="room-frame">
+      <img class="room-scene" src="/room/scene.png" width="${SCENE.w}" height="${SCENE.h}" fetchpriority="high" alt="${esc(c.room.alt)}">
+      <canvas id="room-fx" width="${SCENE.w}" height="${SCENE.h}" aria-hidden="true"></canvas>
+      ${mon("main", c.room.wake)}
+      ${mon("side", c.room.napping)}
+    </div>
+    <p class="room-hint">${esc(c.room.hint)}</p>
+  </div>
+`;
+}
 
 const esc = (s: string): string =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -165,7 +196,7 @@ export function shellHtml(c: Content, fontWoff2Base64: string, fs: Node): string
 
   const motd = renderRowsHtml(motdTagged);
   const prompt = renderRowsHtml(promptRows(c));
-  const body = `  <main class="term" id="term" data-focus="off">
+  const body = `${roomHtml(c)}  <main class="term" id="term" data-focus="off">
     <div id="motd" role="group" aria-label="login message">
 ${motd}
     </div>
@@ -182,7 +213,7 @@ ${prompt}
   <label class="io" for="io">command</label>
   <input class="io" id="io" autocomplete="off" autocapitalize="off" autocorrect="off"
          spellcheck="false" enterkeyhint="go" aria-describedby="hint">`;
-  return doc(c, fontWoff2Base64, c.handle, body, config(c, null, fs, s.prompt), `${BOOT_GATE}\n<style>${bootCss(s)}</style>\n`);
+  return doc(c, fontWoff2Base64, c.handle, body, config(c, null, fs, s.prompt), `${ROOM_GATE}\n${BOOT_GATE}\n<style>${bootCss(s)}</style>\n`);
 }
 
 

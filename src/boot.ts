@@ -47,4 +47,4 @@ export function bootCss(s: BootSchedule): string {
 }
 
 /** Set on <html> before first paint, only for a tab that has not booted and does not ask for less motion. */
-export const BOOT_GATE = `<script>try{if(!sessionStorage.getItem("lazie:booted")&&!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("booting")}catch(e){}</script>`;
+export const BOOT_GATE = `<script>try{if(!sessionStorage.getItem("lazie:booted")&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&!document.documentElement.classList.contains("room"))document.documentElement.classList.add("booting")}catch(e){}</script>`;
