@@ -137,3 +137,33 @@ test("only / has a room: direct links open straight into their page", async () =
     assert.ok(!page.includes('id="room"') && !page.includes("lazie:entered"), "no room off the home page");
   }
 });
+
+test("entering: the main monitor wakes the shell, the side one opens napping; reduced motion cuts", async () => {
+  const { planEnter } = await import("../src/room.ts");
+  assert.deepEqual(planEnter("main", false), { animate: true, then: "shell" });
+  assert.deepEqual(planEnter("side", false), { animate: true, then: "/napping/" });
+  assert.deepEqual(planEnter("main", true), { animate: false, then: "shell" });
+});
+
+test("the gate's idea of narrow is the exact opposite of the overlay's wide block", async () => {
+  const { NARROW } = await import("../src/room.ts");
+  const { ROOM_GATE } = await import("../src/html.ts");
+  assert.equal(NARROW, "(max-width: 719.98px), (max-aspect-ratio: 999/1000)");
+  assert.ok(ROOM_GATE.includes(NARROW));
+});
+
+test("review focus 1: a session that entered through the room stays dark on every page, before first paint", async () => {
+  const { shellHtml, screenHtml, nappingHtml, notFoundHtml, THEME_GATE } = await import("../src/html.ts");
+  const c = loadContent();
+  for (const page of [shellHtml(c, "", { dir: true, kids: {} }), screenHtml(c, "", "resume"), nappingHtml(c, ""), notFoundHtml(c, "")]) {
+    const head = page.slice(0, page.indexOf("<body>"));
+    assert.ok(head.includes(THEME_GATE), "every page reads the session's theme in its head");
+  }
+  const set: Record<string, string> = {};
+  const doc = { documentElement: { dataset: set } };
+  const run = (stored: Record<string, string>) => new Function("document", "sessionStorage", THEME_GATE.replace(/^<script>/, "").replace(/<\/script>$/, ""))(doc, { getItem: (k: string) => stored[k] ?? null });
+  run({});
+  assert.equal(set.theme, undefined, "a direct visit keeps the system theme");
+  run({ "lazie:dark": "1" });
+  assert.equal(set.theme, "dark");
+});

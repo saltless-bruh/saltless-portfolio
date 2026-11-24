@@ -5,6 +5,7 @@ import { completeLine, remember, loadHistory, Recall } from "./readline.ts";
 import { resolve, completePath, validCwd, fitPath } from "./fs.ts";
 import { scramble } from "./scramble.ts";
 import { wireAlarm } from "./alarm.ts";
+import { bootRoom } from "./room.ts";
 
 const $ = <T extends Element>(sel: string): T => {
   const el = document.querySelector<T>(sel);
@@ -33,6 +34,9 @@ if (cfg.active === "napping" && io && cfg.napping) {
 } else {
   bootShell(io);
 }
+
+/** The room's controls, once it is up: `exit` uses them to go back out. */
+let roomCtl: { zoomOut: () => void } | null = null;
 
 function bootShell(io: HTMLInputElement): void {
 const term = $<HTMLElement>("#term");
@@ -195,14 +199,16 @@ const focus = () => { io.focus({ preventScroll: true }); term.dataset.focus = "o
 io.addEventListener("blur", () => { term.dataset.focus = "off"; });
 io.addEventListener("focus", () => { term.dataset.focus = "on"; });
 document.addEventListener("pointerdown", (e) => {
-  // Let a real selection or a link win; anything else means the visitor wants the prompt.
-  if ((e.target as Element)?.closest("a")) return;
+  // Let a real selection or a link win; anything else means the visitor wants the prompt. The room
+  // is not the prompt: while it covers the window, a click there is the room's.
+  if ((e.target as Element)?.closest("a, #room") || document.documentElement.classList.contains("room")) return;
   if (!window.getSelection()?.toString()) focus();
 });
 
 paint();
 showCwd();
-focus();
+// While the room covers the window the shell waits behind it, unfocused, until the monitor is clicked.
+if (!document.documentElement.classList.contains("room")) focus();
 
 /**
  * The one scripted moment on this screen, and it marks a state change rather than decorating one:
@@ -226,6 +232,7 @@ const startHint = () => { if (hint && !hinted) { hinted = true; void scramble(hi
  * that skips is not swallowed: a letter typed during the boot lands in the prompt.
  */
 const root = document.documentElement;
+const runBoot = (): void => {
 if (root.classList.contains("booting")) {
   try { sessionStorage.setItem("lazie:booted", "1"); } catch { /* boots again next time */ }
   const end = () => {
@@ -243,4 +250,20 @@ if (root.classList.contains("booting")) {
 } else {
   startHint();
 }
+};
+
+/**
+ * The room (/ only). Entering it is where the shell's boot begins: the gate held `booting` back
+ * while the room was up, so it is added here, and the CSS schedule plays as the zoom lands.
+ */
+roomCtl = document.getElementById("room") ? bootRoom({
+  onEnter: () => {
+    let booted = false;
+    try { booted = !!sessionStorage.getItem("lazie:booted"); } catch { /* boot */ }
+    if (!booted && !matchMedia("(prefers-reduced-motion: reduce)").matches) root.classList.add("booting");
+    runBoot();
+    focus();
+  },
+}) : null;
+if (!root.classList.contains("room")) runBoot();
 }

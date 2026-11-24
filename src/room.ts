@@ -46,3 +46,11 @@ export function catFrame(sec: number): 0 | 1 | 2 | 3 {
   const flick = sec % FLICK < FLICK_FOR ? 2 : 0;
   return (breath + flick) as 0 | 1 | 2 | 3;
 }
+
+/** Narrow: a phone, or any window taller than it is wide. The room is a banner there, never an overlay. */
+export const NARROW = "(max-width: 719.98px), (max-aspect-ratio: 999/1000)";
+
+/** Where a click on a monitor leads, and whether the camera moves to get there. */
+export function planEnter(which: "main" | "side", reduced: boolean): { animate: boolean; then: "shell" | "/napping/" } {
+  return { animate: !reduced, then: which === "main" ? "shell" : "/napping/" };
+}

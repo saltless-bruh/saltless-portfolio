@@ -11,10 +11,13 @@ import { startupRows, exchangeRows, nappingRows, AGENT_INPUT_COL, statusRight } 
 import { mascotSvg } from "./mascot.ts";
 import { PROMPT as AGENT_PROMPT } from "./napping.ts";
 import type { Row } from "./rows.ts";
-import { MONITORS, SCENE } from "./room.ts";
+import { MONITORS, SCENE, NARROW } from "./room.ts";
 
-/** Narrow: a phone, or any window taller than it is wide. The room is a banner there, never an overlay. */
-const NARROW = "(max-width: 719.98px), (max-aspect-ratio: 999/1000)";
+/**
+ * Every page, before first paint: a session that entered through the room (which is night) stays
+ * dark on every page it visits. A direct visit sets nothing and keeps following the system theme.
+ */
+export const THEME_GATE = `<script>try{if(sessionStorage.getItem("lazie:dark"))document.documentElement.dataset.theme="dark"}catch(e){}</script>`;
 
 /**
  * Runs before first paint, before BOOT_GATE. On a wide screen it puts the room up for a tab that has
@@ -57,6 +60,7 @@ function doc(c: Content, font: string, title: string, bodyHtml: string, cfg: str
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${THEME_GATE}
 ${head}<title>${esc(title)}</title>
 <meta name="description" content="offensive security and agentic AI systems. the shell is the router.">
 <style>${css(font)}</style>
